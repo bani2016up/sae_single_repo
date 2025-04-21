@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "ai-services"
+version = "0.1.0"
+description = ""
+authors = ["bani2016up <bani2016up@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
