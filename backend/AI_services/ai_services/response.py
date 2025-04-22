@@ -1,11 +1,10 @@
 """
-    This module defines the SuggestionResponse class, which represents the result of evaluating a single factual assertion.
-    It includes the following components:
-    1. ``SuggestionResponse``: A dataclass that encapsulates the result of evaluating a factual assertion.
-    2. ``ErrorPosition``: A dataclass that represents the position of an error in the text.
+This module defines the data models used for the response of the AI service.
+It includes the following components:
+1. ``ErrorPosition``: Represents the position of an error in the text.
+2. ``SuggestionResponse``: Represents the result of evaluating a single factual assertion.
 """
-from dataclasses import dataclass
-from typing import Any, Dict
+from pydantic import BaseModel, PositiveInt
 
 __all__ = (
     "SuggestionResponse",
@@ -13,31 +12,21 @@ __all__ = (
 )
 
 
-@dataclass(repr=True, frozen=True, kw_only=True)
-class ErrorPosition(object):
+class ErrorPosition(BaseModel):
     """
     Represents the position of an error in the text.
+
+    Attributes:
+        start (int): The starting index of the error in the text.
+        end (int): The ending index of the error in the text.
+        in_original (bool): Indicates if the position is in the original text.
     """
-    start: int
-    end: int
+    start: PositiveInt
+    end: PositiveInt
     in_original: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
-        """
-        Convert the error position to a dictionary.
 
-        Returns:
-            Dict[str, Any]: A dict with keys ``start``, ``end``, and ``in_original``.
-        """
-        return {
-            "start": self.start,
-            "end": self.end,
-            "in_original": self.in_original,
-        }
-
-
-@dataclass(repr=True, frozen=True, kw_only=True)
-class SuggestionResponse(object):
+class SuggestionResponse(BaseModel):
     """
     Represents the result of evaluating a single factual assertion.
 
@@ -51,17 +40,3 @@ class SuggestionResponse(object):
     position: ErrorPosition
     is_correct: bool
     explanation: str
-
-    def to_dict(self) -> Dict[str, Any]:
-        """
-        Convert the response to a dictionary.
-
-        Returns:
-            Dict[str, Any]: A dict with keys ``fact``, ``is_correct``, and ``explanation``.
-        """
-        return {
-            "fact": self.fact,
-            "is_correct": self.is_correct,
-            "explanation": self.explanation,
-            "position": self.position.to_dict()
-        }
