@@ -17,24 +17,13 @@ class Project(Base):
     __tablename__ = "projects"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     title = Column(String, nullable=False)
-    description = Column(Text, nullable=True)  # Simplified description field
     sub_title = Column(String, nullable=True)
     abstract = Column(String, nullable=True)
     keywords = Column(ARRAY(String), nullable=True)  # List of keywords
     study_organization = Column(String, nullable=True)
 
-
-class UserToProject(Base):
-    __tablename__ = "user_to_project"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
-    role = Column(String, nullable=False)  # Role in the project
-    permissions = Column(String, nullable=True)  # Permissions in the project
-    last_modified = Column(DateTime(timezone=True), nullable=True)
-    last_viewed = Column(DateTime(timezone=True), nullable=False)
 
 
 class ProjectGoal(Base):
