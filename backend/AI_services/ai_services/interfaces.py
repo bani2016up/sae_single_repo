@@ -40,7 +40,7 @@ class FactCheckerInterface(ABC):
         Evaluate a single sentence or a small list of sentences.
 
         Args:
-            sentences (str): One or more sentences to evaluate.
+            sentences (str): One sentence to evaluate.
             context (str, optional): Additional context for the evaluation.
 
         Returns:
