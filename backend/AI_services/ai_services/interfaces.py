@@ -35,12 +35,12 @@ class FactCheckerInterface(ABC):
         ...
 
     @abstractmethod
-    def evaluate_sentence(self, evaluate_sentence: str, context: str = "") -> List[SuggestionResponse]:
+    def evaluate_sentence(self, sentence: str, context: str = "") -> List[SuggestionResponse]:
         """
         Evaluate a single sentence.
 
         Args:
-            evaluate_sentence (str): One sentence to evaluate.
+            sentence (str): One sentence to evaluate.
             context (str, optional): Additional context for the evaluation.
 
         Returns:

@@ -1,7 +1,7 @@
 """
-    This module defines the ModelResponse class, which represents the result of evaluating a single factual assertion.
+    This module defines the SuggestionResponse class, which represents the result of evaluating a single factual assertion.
     It includes the following components:
-    1. ``ModelResponse``: A dataclass that encapsulates the result of evaluating a factual assertion.
+    1. ``SuggestionResponse``: A dataclass that encapsulates the result of evaluating a factual assertion.
     2. ``ErrorPosition``: A dataclass that represents the position of an error in the text.
 """
 from dataclasses import dataclass
