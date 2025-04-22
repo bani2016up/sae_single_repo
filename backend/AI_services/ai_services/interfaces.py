@@ -30,21 +30,21 @@ class FactCheckerInterface(ABC):
             context (str, optional): Additional context or domain knowledge to guide evaluation.
 
         Returns:
-            List[ModelResponse]: A list of ModelResponse instances for each assertion evaluated.
+            List[SuggestionResponse]: A list of SuggestionResponse instances for each assertion evaluated.
         """
         ...
 
     @abstractmethod
-    def evaluate_sentence(self, sentences: str, context: str = "") -> List[SuggestionResponse]:
+    def evaluate_sentence(self, evaluate_sentence: str, context: str = "") -> List[SuggestionResponse]:
         """
-        Evaluate a single sentence or a small list of sentences.
+        Evaluate a single sentence.
 
         Args:
-            sentences (str): One sentence to evaluate.
+            evaluate_sentence (str): One sentence to evaluate.
             context (str, optional): Additional context for the evaluation.
 
         Returns:
-            ModelResponse: A ModelResponse instance with the evaluation result.
+            List[SuggestionResponse]: A list of SuggestionResponse instances for the evaluated sentence.
         """
         ...
 
