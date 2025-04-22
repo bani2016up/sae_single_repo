@@ -7,7 +7,7 @@ It includes the following components:
 from abc import ABC, abstractmethod
 from typing import Any, List, Dict
 
-from .response import ModelResponse
+from .response import SuggestionResponse
 
 __all__ = (
     "FactCheckerInterface",
@@ -21,7 +21,7 @@ class FactCheckerInterface(ABC):
     """
 
     @abstractmethod
-    def evaluate_text(self, text: str, *, context: str = "") -> List[ModelResponse]:
+    def evaluate_text(self, text: str, *, context: str = "") -> List[SuggestionResponse]:
         """
         Analyze the given text, split into assertions, and evaluate each.
 
@@ -35,7 +35,7 @@ class FactCheckerInterface(ABC):
         ...
 
     @abstractmethod
-    def evaluate_sentence(self, sentences: str, context: str = "") -> List[ModelResponse]:
+    def evaluate_sentence(self, sentences: str, context: str = "") -> List[SuggestionResponse]:
         """
         Evaluate a single sentence or a small list of sentences.
 
