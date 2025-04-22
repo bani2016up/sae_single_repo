@@ -3,10 +3,11 @@ from sqlalchemy.orm import relationship
 from database.database import Base
 
 
-class ProjectGoal(Base):
-    __tablename__ = "project_goals"
+class DocumentGoal(Base):
+    __tablename__ = "document_goals"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     content = Column(String, nullable=False)
-    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
+    document_id = Column(Integer, ForeignKey("documents.id"), nullable=False)
     is_reached = Column(Boolean, default=False, nullable=False)
+    document = relationship("Document", back_populates="document_goals")

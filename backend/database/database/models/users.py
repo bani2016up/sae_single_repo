@@ -11,3 +11,5 @@ class User(Base):
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
     email = Column(String, nullable=False, unique=True)
+    password = Column(String, nullable=False)
+    documents = relationship("Document", back_populates="user")

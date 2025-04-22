@@ -11,4 +11,4 @@ class _Source_LinkDAO(_source_link_dao):
     ...
 
 
-UserDAO = _Source_LinkDAO(SourceLink)
+Source_LinkDAO = _Source_LinkDAO(SourceLink)
