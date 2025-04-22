@@ -35,7 +35,7 @@ class FactCheckerInterface(ABC):
         ...
 
     @abstractmethod
-    def evaluate_sentence(self, sentences: str, *, context: str = "") -> ModelResponse:
+    def evaluate_sentence(self, sentences: str, context: str = "") -> List[ModelResponse]:
         """
         Evaluate a single sentence or a small list of sentences.
 
