@@ -1,9 +1,0 @@
-from .request import UserBase, UserCreate, UserUpdate
-
-
-class UserResponse(UserBase):
-    ...
-class UserCreateResponse(UserCreate):
-    ...
-class UserUpdateResponse(UserUpdate):
-    ...

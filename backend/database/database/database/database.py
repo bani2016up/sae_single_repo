@@ -7,7 +7,8 @@ import os
 load_dotenv()
 
 SQLALCHEMY_DATABASE_URL = os.getenv("SQLALCHEMY_DATABASE_URL")
-
+if not SQLALCHEMY_DATABASE_URL:
+    raise ValueError("DATABASE_URL is not set in the .env file")
 
 engine = create_async_engine(
     SQLALCHEMY_DATABASE_URL,
@@ -23,7 +24,3 @@ SessionLocal = async_sessionmaker(
 )
 
 class Base(DeclarativeBase): ...
-
-async def init_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
