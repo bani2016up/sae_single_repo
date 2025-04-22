@@ -87,7 +87,7 @@ class VectorStorageInterface(ABC):
             text (str): The query text to search for.
             k (int, optional): The number of nearest neighbors to return.
 
-        Returns:ч
+        Returns:
             List[Dict[str, Any]]: A list of search results, each containing
         """
         ...
