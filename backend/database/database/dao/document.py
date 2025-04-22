@@ -1,4 +1,4 @@
-from models.users import Document
+from models.documents import Document
 from sqlalchemy.orm import Session
 from sqlalchemy import select, update, delete
 

@@ -1,4 +1,4 @@
-from models.users import SourceLink
+from models.source_links import SourceLink
 from sqlalchemy.orm import Session
 from sqlalchemy import select, update, delete
 

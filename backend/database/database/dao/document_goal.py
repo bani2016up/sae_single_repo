@@ -1,4 +1,4 @@
-from models.users import DocumentGoal
+from models.document_goals import DocumentGoal
 from sqlalchemy.orm import Session
 from sqlalchemy import select, update, delete
 

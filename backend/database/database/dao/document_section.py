@@ -1,4 +1,4 @@
-from models.users import DocumentSection
+from models.document_sections import DocumentSection
 from sqlalchemy.orm import Session
 from sqlalchemy import select, update, delete
 
