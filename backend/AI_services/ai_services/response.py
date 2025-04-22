@@ -4,7 +4,7 @@ It includes the following components:
 1. ``ErrorPosition``: Represents the position of an error in the text.
 2. ``SuggestionResponse``: Represents the result of evaluating a single factual assertion.
 """
-from pydantic import BaseModel, PositiveInt
+from pydantic import BaseModel
 
 __all__ = (
     "SuggestionResponse",
@@ -21,8 +21,8 @@ class ErrorPosition(BaseModel):
         end (int): The ending index of the error in the text.
         in_original (bool): Indicates if the position is in the original text.
     """
-    start: PositiveInt
-    end: PositiveInt
+    start: int
+    end: int
     in_original: bool = False
 
 
