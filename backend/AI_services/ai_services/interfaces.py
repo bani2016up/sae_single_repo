@@ -10,12 +10,12 @@ from typing import Any, List, Dict
 from .response import ModelResponse
 
 __all__ = (
-    "AIServiceInterface",
+    "FactCheckerInterface",
     "VectorStorageInterface"
 )
 
 
-class AIServiceInterface(ABC):
+class FactCheckerInterface(ABC):
     """
     Defines the interface for an AI-based fact-checking service.
     """
