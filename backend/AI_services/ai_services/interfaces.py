@@ -53,7 +53,7 @@ class DeviceAwareModel(ABC):
         ...
 
 
-class FactCheckerInterface(BaseModel):
+class FactCheckerInterface(DeviceAwareModel):
     """
     Defines the interface for an AI-based fact-checking service.
     """
