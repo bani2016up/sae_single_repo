@@ -38,7 +38,7 @@ class DeviceAwareModel(ABC):
 
     @abstractmethod
     def to(self, device: Literal["cpu", "cuda"]) -> None:
-        """"
+        """
         Transfers the model to the specified device.
 
         Parameters:
