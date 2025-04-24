@@ -1,21 +1,59 @@
 """
 This module defines interfaces for AI-based fact-checking services and vector storage backends.
-It includes the following components:
-1. ``AIServiceInterface``: An abstract base class defining the interface for AI-based fact-checking services.
-2. ``VectorStorageInterface``: An abstract base class defining the interface for vector storage backends.
+
+Interfaces:
+    - ``DeviceAwareModel``: Abstract base class for device-aware models.
+    - ``FactCheckerInterface``: Interface for AI-based fact-checking services.
+    - ``VectorStorageInterface``: Interface for vector storage backends.
 """
+
 from abc import ABC, abstractmethod
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Literal
 
 from .response import SuggestionResponse
 
 __all__ = (
+    "DeviceAwareModel",
     "FactCheckerInterface",
     "VectorStorageInterface"
 )
 
 
-class FactCheckerInterface(ABC):
+
+class DeviceAwareModel(ABC):
+    """
+    Abstract base class for all device-aware models.
+
+    Defines a common interface for managing device placement.
+    """
+
+    def __init__(self, *, device: Literal["cpu", "cuda"] = "cuda"):
+        """
+        Initializes the model on the specified device.
+
+        Parameters:
+            device (Literal["cpu", "cuda"]): Target device for model operations.
+        """
+        self.device = device
+
+    @abstractmethod
+    def to(self, device: Literal["cpu", "cuda"]) -> None:
+        """
+        Transfers the model to the specified device.
+
+        Parameters:
+            device (Literal["cpu", "cuda"]): A valid device string.
+
+        Raises:
+            ValueError: If the specified device is not supported.
+
+        Examples:
+            model.to("cuda")
+        """
+        ...
+
+
+class FactCheckerInterface(DeviceAwareModel):
     """
     Defines the interface for an AI-based fact-checking service.
     """
