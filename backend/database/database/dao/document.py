@@ -21,4 +21,5 @@ class _DocumentDAO(_document_dao):
         result = await sess.execute(stmt)
         return result.scalars().all()
 
+
 DocumentDAO = _DocumentDAO(Document)
