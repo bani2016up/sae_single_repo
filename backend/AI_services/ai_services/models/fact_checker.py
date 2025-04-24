@@ -4,12 +4,12 @@ from tqdm.auto import tqdm
 from typing import List, Literal, Iterable, Union
 from transformers import RobertaForSequenceClassification, RobertaTokenizer
 
-from ..interfaces import FactCheckerInterface, DeviceAwareModel
+from ..interfaces import FactCheckerInterface, DeviceAwareModel, VectorStorageInterface
 from ..response import SuggestionResponse
 from ..processing import Pipeline, get_default_paragraph_processing_pipeline
 
 
-class _BaseModel(DeviceAwareModel):
+class FactCheckingModelBase(DeviceAwareModel):
     def __init__(
         self,
         model_name: str = "Dzeniks/roberta-fact-check",
@@ -31,7 +31,7 @@ class _BaseModel(DeviceAwareModel):
         self.model.to(device)
         self.tokenizer.to(device)
 
-    def to(self, device: Literal["cpu", "cuda"]) -> "_BaseModel":
+    def to(self, device: Literal["cpu", "cuda"]) -> "FactCheckingModelBase":
         self.device = device
         self.model.to(device)
         self.tokenizer.to(device)
@@ -63,9 +63,10 @@ class _BaseModel(DeviceAwareModel):
     forward = __call__  # just in case
 
 
-class FactChecker(FactCheckerInterface, _BaseModel):
+class FactChecker(FactCheckerInterface, FactCheckingModelBase):
     def __init__(
         self,
+        vector_storage: VectorStorageInterface,
         model_name: str = "Dzeniks/roberta-fact-check",
         sentence_processing_pipeline: Pipeline = None,
         paragraph_processing_pipeline: Pipeline = None,
@@ -76,7 +77,6 @@ class FactChecker(FactCheckerInterface, _BaseModel):
         use_tqdm: bool = False,
         paragraph_processing_device: Literal["cuda", "cpu"] = "cuda",
         sentence_processing_device: Literal["cuda", "cpu"] = "cpu"
-
     ):
         super().__init__(
             model_name=model_name,
@@ -95,6 +95,7 @@ class FactChecker(FactCheckerInterface, _BaseModel):
         self.sentence_processing_pipeline = (
                 sentence_processing_pipeline or Pipeline()
         )
+        self.vector_storage = vector_storage
 
         self.paragraph_processing_pipeline.to(paragraph_processing_device)
         self.sentence_processing_pipeline.to(sentence_processing_device)
