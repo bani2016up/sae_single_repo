@@ -10,7 +10,7 @@ Interfaces:
 import functools
 
 from abc import ABC, abstractmethod, ABCMeta
-from typing import Any, List, Dict, Literal
+from typing import Any, List, Dict, Literal, Self
 
 from .response import SuggestionResponse
 
@@ -57,7 +57,7 @@ class DeviceAwareModel(ABC, metaclass=_CatchKIMeta):
         self.device = device
 
     @abstractmethod
-    def to(self, device: Literal["cpu", "cuda"]) -> None:
+    def to(self, device: Literal["cpu", "cuda"]) -> Self:
         """
         Transfers the model to the specified device.
 
