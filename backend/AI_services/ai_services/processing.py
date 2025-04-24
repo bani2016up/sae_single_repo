@@ -1,16 +1,29 @@
 import inspect
+import torch
+import re
 
 from collections import OrderedDict
-from typing import List, Tuple, Any, Callable
+from typing import List, Tuple, Any, Callable, Literal
 from tqdm.auto import tqdm
 
-class Pipeline(object):
+from .interfaces import DeviceAwareModel
+
+__all__ = (
+    "Pipeline",
+    "get_default_paragraph_processing_pipeline"
+)
+
+
+class Pipeline(DeviceAwareModel):
     def __init__(
         self,
         steps: List[Tuple[str, Callable]] = None,
-        use_tqdm = False,
+        use_tqdm=False,
+        *,
+        device: Literal["cuda", "cpu"] = "cpu",
         **kwargs
     ):
+        super().__init__(device=device)
         if steps is None:
             steps = []
         self.use_tqdm = use_tqdm
@@ -22,15 +35,27 @@ class Pipeline(object):
         for name, func in kwargs.items():
             self.register(name, func)
 
+    def _func2device(self, func: Callable):
+        if isinstance(func, (DeviceAwareModel, torch.nn.Module)):
+            func.to(self.device)
+        return func
+
     def register(self, name: str, func: Callable):
         if name in self.pipeline:
             raise ValueError(f"Pipeline already contains a step with name '{name}'")
         self.pipeline[name] = func
+        self._func2device(func)
 
     def unregister(self, name: str):
         if name not in self.pipeline:
             raise ValueError(f"Pipeline does not contain a step with name '{name}'")
         del self.pipeline[name]
+
+    def to(self, device: Literal["cpu", "cuda"]) -> "Pipeline":
+        self.device = device
+        for func in self.pipeline.values():
+            self._func2device(func)
+        return self
 
     def __call__(self, data: Any):
         iterator = self.pipeline.items()
@@ -68,3 +93,10 @@ class Pipeline(object):
             lines.append(f"\t({name}): {func_str}")
         body = "\n".join(lines)
         return f"Pipeline(\n{body}\n)"
+
+
+def get_default_paragraph_processing_pipeline() -> Pipeline:
+    return Pipeline(
+        sentence_reg=re.compile(r"(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=[.?])\s").split,
+        device="cpu"
+    )
