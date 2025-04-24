@@ -1,4 +1,4 @@
-from models.users import User
+from models.validations import Validation
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
 from sqlalchemy import Result, ScalarResult
@@ -6,10 +6,10 @@ from sqlalchemy import Result, ScalarResult
 from database.dao import TemplateDAO, construct_dao
 
 
-_user_dao = construct_dao(User)
+_validation_dao = construct_dao(Validation)
 
-class _UserDAO(_user_dao):
+class _ValidationDAO(_validation_dao):
     ...
 
 
-UserDAO = _UserDAO(User)
+ValidationDAO = _ValidationDAO(Validation)

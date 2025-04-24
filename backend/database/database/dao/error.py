@@ -1,4 +1,4 @@
-from models.users import User
+from models.errors import Error
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
 from sqlalchemy import Result, ScalarResult
@@ -6,10 +6,10 @@ from sqlalchemy import Result, ScalarResult
 from database.dao import TemplateDAO, construct_dao
 
 
-_user_dao = construct_dao(User)
+_error_dao = construct_dao(Error)
 
-class _UserDAO(_user_dao):
+class _ErrorDAO(_error_dao):
     ...
 
 
-UserDAO = _UserDAO(User)
+ErrorDAO = _ErrorDAO(Error)
