@@ -1,7 +1,7 @@
 
 
 import datetime
-from core.pydantic import BaseConfig
+from app.core.pydantic import BaseConfig
 
 
 class DocumentResponse(BaseConfig):

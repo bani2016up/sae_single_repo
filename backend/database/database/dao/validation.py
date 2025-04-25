@@ -1,10 +1,10 @@
-from models.validations import Validation
+from ..models.validations import Validation
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
 from sqlalchemy import Result, ScalarResult
 from typing import Optional
 
-from database.dao import TemplateDAO, construct_dao
+from ..database.dao import TemplateDAO, construct_dao
 
 
 _validation_dao = construct_dao(Validation)
