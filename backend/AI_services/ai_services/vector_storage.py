@@ -125,7 +125,7 @@ class VectorStorage(VectorStorageInterface):
         results: List[Dict[str, Any]] = []
 
         for dist, idx in zip(distances[0], ids[0]):
-            if idx == -1 or dist > threshold:
+            if idx == -1 or dist <= threshold:
                 continue
             results.append(
                 {
