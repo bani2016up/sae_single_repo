@@ -7,8 +7,10 @@ Interfaces:
     - ``VectorStorageInterface``: Interface for vector storage backends.
 """
 
-from abc import ABC, abstractmethod
-from typing import Any, List, Dict, Literal
+import functools
+
+from abc import ABC, abstractmethod, ABCMeta
+from typing import Any, List, Dict, Literal, Self
 
 from .response import SuggestionResponse
 
@@ -19,8 +21,26 @@ __all__ = (
 )
 
 
+class _CatchKIMeta(ABCMeta):
+    @staticmethod
+    def _catch_keyboard_interrupt(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except KeyboardInterrupt:
+                print(f"Interrupted in {func.__qualname__}")
 
-class DeviceAwareModel(ABC):
+        return wrapper
+
+    def __new__(mcs, name, bases, namespace):
+        for attr_name, attr_val in namespace.items():
+            if (attr_name.startswith("__call__")) or (callable(attr_val) and not attr_name.startswith("__")):
+                namespace[attr_name] = mcs._catch_keyboard_interrupt(attr_val)
+        return super().__new__(mcs, name, bases, namespace)
+
+
+class DeviceAwareModel(ABC, metaclass=_CatchKIMeta):
     """
     Abstract base class for all device-aware models.
 
@@ -34,10 +54,10 @@ class DeviceAwareModel(ABC):
         Parameters:
             device (Literal["cpu", "cuda"]): Target device for model operations.
         """
-        self.device = device
+        self._device = device
 
     @abstractmethod
-    def to(self, device: Literal["cpu", "cuda"]) -> None:
+    def to(self, device: Literal["cpu", "cuda"]) -> Self:
         """
         Transfers the model to the specified device.
 
@@ -51,6 +71,16 @@ class DeviceAwareModel(ABC):
             model.to("cuda")
         """
         ...
+
+    @property
+    def device(self) -> Literal["cpu", "cuda"]:
+        """
+        Returns the current device of the model.
+
+        Returns:
+            Literal["cpu", "cuda"]: The current device.
+        """
+        return self._device
 
 
 class FactCheckerInterface(DeviceAwareModel):
