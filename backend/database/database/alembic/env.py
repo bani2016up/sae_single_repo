@@ -6,7 +6,11 @@ import os
 
 # Import your Base and models
 from database.database import Base
-from models.users import User  # Import all your models here
+from models.users import User
+from models.documents import Document
+from models.validations import Validation
+from models.errors import Error
+# Import all your models here
 
 # Load environment variables from .env
 load_dotenv()
