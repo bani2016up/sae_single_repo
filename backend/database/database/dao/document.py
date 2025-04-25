@@ -17,7 +17,7 @@ class _DocumentDAO(_document_dao):
         :param sess: The AsyncSession instance.
         :return: A list of dictionaries containing document parameters.
         """
-        stmt = select(Document).where(Document().user_id == Document.user_id)
+        stmt = select(Document).where(Document.user_id == user_id)
         result = await sess.execute(stmt)
         return result.scalars().all()
 
