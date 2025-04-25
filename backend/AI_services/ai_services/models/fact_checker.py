@@ -8,8 +8,12 @@ from ..interfaces import FactCheckerInterface, DeviceAwareModel, VectorStorageIn
 from ..response import SuggestionResponse
 from ..processing import Pipeline, get_default_paragraph_processing_pipeline
 
+__all__ = (
+    "FactCheckingModel",
+    "FactCheckerPipeline"
+)
 
-class FactCheckingModelBase(DeviceAwareModel):
+class FactCheckingModel(DeviceAwareModel):
     def __init__(
         self,
         model_name: str = "Dzeniks/roberta-fact-check",
@@ -31,7 +35,7 @@ class FactCheckingModelBase(DeviceAwareModel):
         self.model.to(device)
         self.tokenizer.to(device)
 
-    def to(self, device: Literal["cpu", "cuda"]) -> "FactCheckingModelBase":
+    def to(self, device: Literal["cpu", "cuda"]) -> "FactCheckingModel":
         self.device = device
         self.model.to(device)
         self.tokenizer.to(device)
@@ -63,7 +67,7 @@ class FactCheckingModelBase(DeviceAwareModel):
     forward = __call__  # just in case
 
 
-class FactChecker(FactCheckerInterface, FactCheckingModelBase):
+class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
     def __init__(
         self,
         vector_storage: VectorStorageInterface,
@@ -102,7 +106,7 @@ class FactChecker(FactCheckerInterface, FactCheckingModelBase):
 
     def evaluate_sentence(self, sentence: str, context: str = "") -> List[SuggestionResponse]:
         # TODO: Implement the logic to evaluate a single sentence
-        pass
+        raise NotImplementedError("evaluate_sentence is not implemented.")
 
     def evaluate_text(self, text: str, *, context: str = "") -> List[SuggestionResponse]:
         sentences = self.paragraph_processing_pipeline(text)
