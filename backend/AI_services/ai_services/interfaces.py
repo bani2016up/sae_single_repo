@@ -117,13 +117,14 @@ class VectorStorageInterface(ABC):
         ...
 
     @abstractmethod
-    def search(self, text: str, *, k: int = 2) -> List[Dict[str, Any]]:
+    def search(self, text: str, *, k: int = 5, threshold: float = 1.0) -> List[Dict[str, Any]]:
         """
         Perform a semantic similarity search for the given query.
 
         Args:
             text (str): The query text to search for.
             k (int, optional): The number of nearest neighbors to return.
+            threshold (float, optional): The minimum similarity score for results.
 
         Returns:
             List[Dict[str, Any]]: A list of search results, each containing

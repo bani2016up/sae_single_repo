@@ -105,12 +105,13 @@ class VectorStorage(VectorStorageInterface):
         for idx, md in zip(ids, metadata):
             self._metadata[idx] = md
 
-    def search(self, text: str, *, k: int = 2) -> List[Dict[str, Any]]:
+    def search(self, text: str, *, k: int = 5, threshold: float = 1.0) -> List[Dict[str, Any]]:
         """
         Search for the nearest neighbors of the given text in the vector storage.
         Args:
             text (str): The text to search for.
             k (int): The number of nearest neighbors to return.
+            threshold (float): The distance threshold for filtering results.
         Returns:
             List[Dict[str, Any]]: A list of dictionaries containing the ID, score,
                                   and metadata of the nearest neighbors.
@@ -124,7 +125,7 @@ class VectorStorage(VectorStorageInterface):
         results: List[Dict[str, Any]] = []
 
         for dist, idx in zip(distances[0], ids[0]):
-            if idx == -1:
+            if idx == -1 or dist > threshold:
                 continue
             results.append(
                 {
