@@ -1,10 +1,14 @@
 import torch
 
 from tqdm.auto import tqdm
-from typing import List, Literal, Iterable, Union
+from typing import Any, List, Literal, Iterable, Union
 from transformers import RobertaForSequenceClassification, RobertaTokenizer
 
-from ..interfaces import FactCheckerInterface, DeviceAwareModel, VectorStorageInterface
+from ..interfaces import (
+    FactCheckerInterface,
+    DeviceAwareModel,
+    VectorStorageInterface
+)
 from ..response import SuggestionResponse
 from ..processing import Pipeline, get_default_paragraph_processing_pipeline
 
@@ -147,8 +151,16 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         self.sentence_processing_pipeline.to(sentence_processing_device)
 
     def evaluate_sentence(self, sentence: str, context: str = "") -> List[SuggestionResponse]:
-        # TODO: Implement the logic to evaluate a single sentence
+        # HACK
+        # FIXME: context? for what?
+        # TODO: add k to the constructor
+        # TODO: result -> SuggestionResponse
         raise NotImplementedError("evaluate_sentence is not implemented.")
+        metadata = self.vector_storage.search(sentence, k=5)
+        if len(metadata) == 0:
+            return []
+        historical_data = self._metadata2text(metadata)
+        result = self.forward(sentence, historical_data)
 
     def evaluate_text(self, text: str, *, context: str = "") -> List[SuggestionResponse]:
         sentences = self.paragraph_processing_pipeline(text)
@@ -166,7 +178,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
                 result.extend(self.evaluate_sentence(sentence, context=context))
         return result
 
-    # proposal: property -> self.something_to(...)
+    # XXX: property -> self.something_to(...)
     @property
     def paragraph_processing_device(self) -> Literal["cuda", "cpu"]:
         return self._paragraph_processing_device
@@ -184,3 +196,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
     def sentence_processing_device(self, device: Literal["cuda", "cpu"]):
         self._sentence_processing_device = device
         self.sentence_processing_pipeline.to(device)
+
+    @staticmethod
+    def _metadata2text(metadata: list[dict[str, Any]]) -> str:
+        return ".".join([text['metadata']['text'] for text in metadata])
