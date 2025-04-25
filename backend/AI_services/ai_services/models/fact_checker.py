@@ -9,7 +9,7 @@ from ..interfaces import (
     DeviceAwareModel,
     VectorStorageInterface
 )
-from ..response import SuggestionResponse
+from ..response import SuggestionResponse, SuggestionPosition
 from ..processing import Pipeline, get_default_paragraph_processing_pipeline
 
 __all__ = (
@@ -81,7 +81,6 @@ class FactCheckingModel(DeviceAwareModel):
             claim = [claim]
         if isinstance(evidence, str):
             evidence = [evidence]
-        # TODO: Handle with custom classes
         if len(claim) != len(evidence):
             raise ValueError("Claim and evidence must have the same length.")
 
@@ -138,9 +137,6 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
             use_tqdm=use_tqdm
         )
 
-        self._paragraph_processing_device = paragraph_processing_device
-        self._sentence_processing_device = sentence_processing_device
-
         self.paragraph_processing_pipeline = (
                 paragraph_processing_pipeline or get_default_paragraph_processing_pipeline()
         )
@@ -158,8 +154,9 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
     def evaluate_sentence(self, sentence: str, context: str = "") -> List[SuggestionResponse]:
         # HACK
         # FIXME: context? for what?
-        # TODO: result -> SuggestionResponse
-        raise NotImplementedError("evaluate_sentence is not implemented yet")
+        # TODO: fact checking with NER
+        # TODO: explanation
+        # TODO: in_original=True
         metadata = self.vector_storage.search(
             sentence,
             k=self.storage_search_k,
@@ -169,6 +166,18 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
             return []
         historical_data = self._metadata2text(metadata)
         result = self.forward(sentence, historical_data)
+        return [
+            SuggestionResponse(
+                fact=sentence,
+                is_correct=result[0].item(),
+                position=SuggestionPosition(
+                    start_char_index=0,
+                    end_char_index=len(sentence),
+                    in_original=False
+                ),
+                explanation="",
+            )
+        ]
 
     def evaluate_text(self, text: str, *, context: str = "") -> List[SuggestionResponse]:
         sentences = self.paragraph_processing_pipeline(text)
@@ -185,25 +194,6 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
             if len(sentence) > 0:
                 result.extend(self.evaluate_sentence(sentence, context=context))
         return result
-
-    # XXX: property -> self.something_to(...)
-    @property
-    def paragraph_processing_device(self) -> Literal["cuda", "cpu"]:
-        return self._paragraph_processing_device
-
-    @paragraph_processing_device.setter
-    def paragraph_processing_device(self, device: Literal["cuda", "cpu"]):
-        self._paragraph_processing_device = device
-        self.paragraph_processing_pipeline.to(device)
-
-    @property
-    def sentence_processing_device(self) -> Literal["cuda", "cpu"]:
-        return self._sentence_processing_device
-
-    @sentence_processing_device.setter
-    def sentence_processing_device(self, device: Literal["cuda", "cpu"]):
-        self._sentence_processing_device = device
-        self.sentence_processing_pipeline.to(device)
 
     @staticmethod
     def _metadata2text(metadata: list[dict[str, Any]]) -> str:
