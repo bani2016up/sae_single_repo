@@ -106,6 +106,8 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         sentence_processing_pipeline: Pipeline = None,
         paragraph_processing_pipeline: Pipeline = None,
         *,
+        storage_search_threshold: float = 1.0,
+        storage_search_k: int = 5,
         device: Literal["cuda", "cpu"] = "cuda",
         tokenizer_kwargs: dict = None,
         model_kwargs: dict = None,
@@ -150,13 +152,19 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         self.paragraph_processing_pipeline.to(paragraph_processing_device)
         self.sentence_processing_pipeline.to(sentence_processing_device)
 
+        self.storage_search_k = storage_search_k
+        self.storage_search_threshold = storage_search_threshold
+
     def evaluate_sentence(self, sentence: str, context: str = "") -> List[SuggestionResponse]:
         # HACK
         # FIXME: context? for what?
-        # TODO: add k to the constructor
         # TODO: result -> SuggestionResponse
-        raise NotImplementedError("evaluate_sentence is not implemented.")
-        metadata = self.vector_storage.search(sentence, k=5)
+        raise NotImplementedError("evaluate_sentence is not implemented yet")
+        metadata = self.vector_storage.search(
+            sentence,
+            k=self.storage_search_k,
+            threshold=self.storage_search_threshold
+        )
         if len(metadata) == 0:
             return []
         historical_data = self._metadata2text(metadata)
