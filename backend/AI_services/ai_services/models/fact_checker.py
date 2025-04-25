@@ -13,6 +13,7 @@ __all__ = (
     "FactCheckerPipeline"
 )
 
+
 class FactCheckingModel(DeviceAwareModel):
     def __init__(
         self,
@@ -23,6 +24,15 @@ class FactCheckingModel(DeviceAwareModel):
         model_kwargs: dict = None,
         use_tqdm: bool = False
     ):
+        """
+        Initializes the FactCheckingModel with a pre-trained model and tokenizer.
+        Args:
+            model_name (str): The name of the pre-trained model.
+            device (str): The device to use for computation ("cuda" or "cpu").
+            tokenizer_kwargs (dict): Additional arguments for the tokenizer.
+            model_kwargs (dict): Additional arguments for the model.
+            use_tqdm (bool): Whether to use tqdm for progress bars.
+        """
         super().__init__(device=device)
         self.use_tqdm = use_tqdm
         self.tokenizer = RobertaTokenizer.from_pretrained(
@@ -36,7 +46,14 @@ class FactCheckingModel(DeviceAwareModel):
         self.tokenizer.to(device)
 
     def to(self, device: Literal["cpu", "cuda"]) -> "FactCheckingModel":
-        self.device = device
+        """
+        Moves the model and tokenizer to the specified device.
+        Args:
+            device (str): The device to move the model and tokenizer to ("cuda" or "cpu").
+        Returns:
+            FactCheckingModel: The updated model instance.
+        """
+        self._device = device
         self.model.to(device)
         self.tokenizer.to(device)
         return self
@@ -46,6 +63,16 @@ class FactCheckingModel(DeviceAwareModel):
         claim: Union[str, Iterable[str]],
         evidence: Union[str, Iterable[str]]
     ) -> torch.Tensor:
+        """
+        Processes the claim and evidence using the tokenizer and model.
+        Args:
+            claim (str or Iterable[str]): The claim or claims to evaluate.
+            evidence (str or Iterable[str]): The evidence or evidences to evaluate against the claim.
+        Returns:
+            torch.Tensor: The model outputs.
+        Raises:
+            ValueError: If claim and evidence have different lengths.
+        """
         if isinstance(claim, str):
             claim = [claim]
         if isinstance(evidence, str):
@@ -82,6 +109,21 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         paragraph_processing_device: Literal["cuda", "cpu"] = "cuda",
         sentence_processing_device: Literal["cuda", "cpu"] = "cpu"
     ):
+        """
+        Initializes the FactCheckerPipeline with a pre-trained model and tokenizer.
+
+        Args:
+            vector_storage (VectorStorageInterface): The vector storage for storing and retrieving evidence.
+            model_name (str): The name of the pre-trained model.
+            sentence_processing_pipeline (Pipeline): The pipeline for processing sentences.
+            paragraph_processing_pipeline (Pipeline): The pipeline for processing paragraphs.
+            device (str): The device to use for computation ("cuda" or "cpu").
+            tokenizer_kwargs (dict): Additional arguments for the tokenizer.
+            model_kwargs (dict): Additional arguments for the model.
+            use_tqdm (bool): Whether to use tqdm for progress bars.
+            paragraph_processing_device (str): Device for paragraph processing ("cuda" or "cpu").
+            sentence_processing_device (str): Device for sentence processing ("cuda" or "cpu").
+        """
         super().__init__(
             model_name=model_name,
             device=device,
@@ -124,6 +166,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
                 result.extend(self.evaluate_sentence(sentence, context=context))
         return result
 
+    # proposal: property -> self.something_to(...)
     @property
     def paragraph_processing_device(self) -> Literal["cuda", "cpu"]:
         return self._paragraph_processing_device

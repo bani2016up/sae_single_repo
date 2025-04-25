@@ -54,7 +54,7 @@ class DeviceAwareModel(ABC, metaclass=_CatchKIMeta):
         Parameters:
             device (Literal["cpu", "cuda"]): Target device for model operations.
         """
-        self.device = device
+        self._device = device
 
     @abstractmethod
     def to(self, device: Literal["cpu", "cuda"]) -> Self:
@@ -71,6 +71,16 @@ class DeviceAwareModel(ABC, metaclass=_CatchKIMeta):
             model.to("cuda")
         """
         ...
+
+    @property
+    def device(self) -> Literal["cpu", "cuda"]:
+        """
+        Returns the current device of the model.
+
+        Returns:
+            Literal["cpu", "cuda"]: The current device.
+        """
+        return self._device
 
 
 class FactCheckerInterface(DeviceAwareModel):

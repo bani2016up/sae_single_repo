@@ -52,7 +52,7 @@ class Pipeline(DeviceAwareModel):
         del self.pipeline[name]
 
     def to(self, device: Literal["cpu", "cuda"]) -> "Pipeline":
-        self.device = device
+        self._device = device
         for func in self.pipeline.values():
             self._func2device(func)
         return self
