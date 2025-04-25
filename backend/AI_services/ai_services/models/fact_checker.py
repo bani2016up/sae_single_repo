@@ -47,7 +47,6 @@ class FactCheckingModel(DeviceAwareModel):
         )
         self.model.eval()
         self.model.to(device)
-        self.tokenizer.to(device)
 
     def to(self, device: Literal["cpu", "cuda"]) -> "FactCheckingModel":
         """
@@ -59,7 +58,6 @@ class FactCheckingModel(DeviceAwareModel):
         """
         self._device = device
         self.model.to(device)
-        self.tokenizer.to(device)
         return self
 
     def __call__(
