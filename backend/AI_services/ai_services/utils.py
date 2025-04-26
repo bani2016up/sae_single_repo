@@ -1,10 +1,18 @@
 from copy import deepcopy
-from typing import List, Dict, Union
+from typing import Callable, List, Dict, TypeAlias, Union
 
 from .models.fact_checker import FactCheckerPipeline
 from .interfaces import PromptInterface
 from .static import FACT_CHECKER_PROMPT
 from .typing import PromptType
+
+__all__ = (
+    "PromptGeneratorType",
+    "FactCheckerPrompt",
+    "build_fact_check_model",
+)
+
+PromptGeneratorType: TypeAlias = Union[PromptInterface, Callable[[..., str], PromptType]]
 
 
 class FactCheckerPrompt(PromptInterface):

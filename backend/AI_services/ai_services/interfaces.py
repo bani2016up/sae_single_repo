@@ -19,7 +19,8 @@ __all__ = (
     "DeviceAwareModel",
     "FactCheckerInterface",
     "VectorStorageInterface",
-    "PromptInterface"
+    "PromptInterface",
+    "LLMInterface"
 )
 
 
@@ -223,4 +224,26 @@ class VectorStorageInterface(ABC):
 class PromptInterface(ABC):
     @abstractmethod
     def __call__(self, **kwargs) -> PromptType:
+        ...
+
+
+class LLMInterface(DeviceAwareModel):
+    """
+    Abstract base class for LLM (Large Language Model) interfaces.
+    This class defines the interface for LLMs, including methods for
+    generating text and managing device placement.
+    """
+
+    @abstractmethod
+    def __call__(self, *args, **kwargs) -> str:
+        """
+        Generates text based on the provided input arguments.
+
+        Args:
+            *args: Positional arguments for the model.
+            **kwargs: Keyword arguments for the model.
+
+        Returns:
+            str: The generated text.
+        """
         ...

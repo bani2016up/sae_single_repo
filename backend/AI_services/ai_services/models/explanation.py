@@ -1,20 +1,16 @@
 from transformers import pipeline
-from typing import Union, Callable, TypeAlias
+from typing import Union
 
-from ..interfaces import DeviceAwareModel
-from ..utils import FactCheckerPrompt
-from ..interfaces import PromptInterface
-from ..typing import DeviceType, PromptType
+from ..utils import FactCheckerPrompt, PromptGeneratorType
+from ..interfaces import PromptInterface, LLMInterface
+from ..typing import DeviceType
 
 __all__ = (
     "ExplanationLLM",
-    "PromptGeneratorType"
 )
 
-PromptGeneratorType: TypeAlias = Union[PromptInterface, Callable[[..., str], PromptType]]
 
-
-class ExplanationLLM(DeviceAwareModel):
+class ExplanationLLM(LLMInterface):
     """
     A class for generating explanations using a language model.
     Inherits from DeviceAwareModel to manage device placement.
