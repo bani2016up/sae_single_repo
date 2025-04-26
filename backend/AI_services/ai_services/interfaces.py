@@ -10,14 +10,15 @@ Interfaces:
 import functools
 
 from abc import ABC, abstractmethod, ABCMeta
-from typing import Any, List, Dict, Literal, Self
+from typing import Any, List, Dict, Literal, Self, Union
 
 from .response import SuggestionResponse
 
 __all__ = (
     "DeviceAwareModel",
     "FactCheckerInterface",
-    "VectorStorageInterface"
+    "VectorStorageInterface",
+    "PromptInterface"
 )
 
 
@@ -199,4 +200,10 @@ class VectorStorageInterface(ABC):
         Args:
             filepath (str): Destination path for saving the index.
         """
+        ...
+
+
+class PromptInterface(ABC):
+    @abstractmethod
+    def __call__(self, **kwargs) -> Union[str, List[Dict[str, str]]]:
         ...
