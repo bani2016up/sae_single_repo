@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "documnet-crud"
+name = "document-crud"
 version = "0.1.0"
 description = ""
 authors = ["bani2016up <bani2016up@gmail.com>"]
@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.12"
 fastapi = "^0.115.12"
 database = { path = "../database" }
+uvicorn = "^0.34.2"
 
 [build-system]
 requires = ["poetry-core"]
