@@ -4,6 +4,7 @@ from typing import List, Dict, Union
 from .models.fact_checker import FactCheckerPipeline
 from .interfaces import PromptInterface
 from .static import FACT_CHECKER_PROMPT
+from .typing import PromptType
 
 
 class FactCheckerPrompt(PromptInterface):
@@ -20,7 +21,7 @@ class FactCheckerPrompt(PromptInterface):
     of the prompt structure.
     """
 
-    def __init__(self, base_prompt: Union[str, List[Dict[str, str]]] = None) -> None:
+    def __init__(self, base_prompt: PromptType = None) -> None:
         """
         Initializes the FactCheckerPrompt with a base prompt.
         If no base prompt is provided, a default prompt is used.
@@ -35,7 +36,7 @@ class FactCheckerPrompt(PromptInterface):
             base_prompt = deepcopy(FACT_CHECKER_PROMPT)
         self.base_prompt = base_prompt
 
-    def __call__(self, claim: str, evidence: str) -> Union[str, List[Dict[str, str]]]:
+    def __call__(self, claim: str, evidence: str) -> PromptType:
         """
         Generates a prompt for the given claim and evidence.
         The prompt is created by formatting the base prompt with the provided claim and evidence.

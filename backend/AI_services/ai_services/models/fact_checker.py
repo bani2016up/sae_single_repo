@@ -1,7 +1,7 @@
 import torch
 
 from tqdm.auto import tqdm
-from typing import Any, List, Literal, Iterable, Union
+from typing import Any, List, Iterable, Union
 from transformers import RobertaForSequenceClassification, RobertaTokenizer
 
 from ..interfaces import (
@@ -11,6 +11,7 @@ from ..interfaces import (
 )
 from ..response import SuggestionResponse, SuggestionPosition
 from ..processing import Pipeline, get_default_paragraph_processing_pipeline
+from ..typing import DeviceType
 
 __all__ = (
     "FactCheckingModel",
@@ -23,7 +24,7 @@ class FactCheckingModel(DeviceAwareModel):
         self,
         model_name: str = "Dzeniks/roberta-fact-check",
         *,
-        device: Literal["cuda", "cpu"] = "cuda",
+        device: DeviceType = "cuda",
         tokenizer_kwargs: dict = None,
         model_kwargs: dict = None,
         use_tqdm: bool = False
@@ -48,7 +49,7 @@ class FactCheckingModel(DeviceAwareModel):
         self.model.eval()
         self.model.to(device)
 
-    def to(self, device: Literal["cpu", "cuda"]) -> "FactCheckingModel":
+    def to(self, device: DeviceType) -> "FactCheckingModel":
         """
         Moves the model and tokenizer to the specified device.
         Args:
@@ -105,12 +106,12 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         *,
         storage_search_threshold: float = 1.0,
         storage_search_k: int = 5,
-        device: Literal["cuda", "cpu"] = "cuda",
+        device: DeviceType = "cuda",
         tokenizer_kwargs: dict = None,
         model_kwargs: dict = None,
         use_tqdm: bool = False,
-        paragraph_processing_device: Literal["cuda", "cpu"] = "cuda",
-        sentence_processing_device: Literal["cuda", "cpu"] = "cpu"
+        paragraph_processing_device: DeviceType = "cuda",
+        sentence_processing_device: DeviceType = "cpu"
     ):
         """
         Initializes the FactCheckerPipeline with a pre-trained model and tokenizer.

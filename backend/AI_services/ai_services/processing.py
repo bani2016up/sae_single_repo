@@ -3,10 +3,11 @@ import torch
 import re
 
 from collections import OrderedDict
-from typing import List, Tuple, Any, Callable, Literal
+from typing import List, Tuple, Any, Callable
 from tqdm.auto import tqdm
 
 from .interfaces import DeviceAwareModel
+from .typing import DeviceType
 
 __all__ = (
     "Pipeline",
@@ -20,7 +21,7 @@ class Pipeline(DeviceAwareModel):
         steps: List[Tuple[str, Callable]] = None,
         use_tqdm=False,
         *,
-        device: Literal["cuda", "cpu"] = "cpu",
+        device: DeviceType = "cpu",
         **kwargs
     ):
         super().__init__(device=device)
@@ -51,7 +52,7 @@ class Pipeline(DeviceAwareModel):
             raise ValueError(f"Pipeline does not contain a step with name '{name}'")
         del self.pipeline[name]
 
-    def to(self, device: Literal["cpu", "cuda"]) -> "Pipeline":
+    def to(self, device: DeviceType) -> "Pipeline":
         self._device = device
         for func in self.pipeline.values():
             self._func2device(func)

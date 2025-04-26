@@ -1,13 +1,15 @@
 from transformers import pipeline
-from typing import Literal, Callable, Union
+from typing import Union
 
 from ..interfaces import DeviceAwareModel
 from ..utils import FactCheckerPrompt
 from ..interfaces import PromptInterface
+from ..typing import DeviceType, PromptGeneratorType
 
 __all__ = (
     "ExplanationLLM",
 )
+
 
 class ExplanationLLM(DeviceAwareModel):
     """
@@ -21,8 +23,8 @@ class ExplanationLLM(DeviceAwareModel):
         self,
         model: str = "Open-Orca/Mistral-7B-OpenOrca",
         *,
-        device: Literal["cuda", "cpu"] = "cuda",
-        prompt_generator: Union[PromptInterface, Callable] = None,
+        device: DeviceType = "cuda",
+        prompt_generator: PromptGeneratorType = None,
         torch_dtype: str = "auto",
         device_map: str = "auto",
     ) -> None:
@@ -49,7 +51,7 @@ class ExplanationLLM(DeviceAwareModel):
         self.llm.tokenizer.to(device)
         self.llm.model.to(device)
 
-    def to(self, device: Literal["cpu", "cuda"]) -> None:
+    def to(self, device: DeviceType) -> None:
         """
         Transfers the model to the specified device.
 
