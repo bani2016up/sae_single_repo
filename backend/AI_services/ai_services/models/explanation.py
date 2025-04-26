@@ -1,5 +1,3 @@
-import torch
-
 from transformers import pipeline
 from typing import Literal
 
@@ -37,6 +35,25 @@ class ExplanationLLM(DeviceAwareModel):
         Examples:
             model.to("cuda")
         """
-        self._device = device  # will work in feature/ai/fact-checking
+        self._device = device
         self.llm.tokenizer.to(device)
         self.llm.model.to(device)
+
+    def __call__(
+        self, claim: str,
+        evidence: str,
+        max_new_tokens: int = 256,
+        do_sample: bool = False,
+        temperature: float = 0.1
+    ) -> str:
+        # FIXME: prompt.
+        prompt = f"Claim: {claim}\nEvidence: {evidence}\nExplain why this claim is true or false."
+        response = self.llm(
+            prompt,
+            max_new_tokens=max_new_tokens,
+            do_sample=do_sample,
+            temperature=temperature
+        )
+        return response[0]['generated_text']
+
+    forward = __call__
