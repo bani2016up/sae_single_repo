@@ -95,8 +95,6 @@ class FactCheckingModel(DeviceAwareModel):
             outputs = self.model(**inputs)
         return outputs
 
-    forward = __call__  # just in case
-
 
 class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
     def __init__(
@@ -189,7 +187,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
             return []
 
         historical_data = self._metadata2text(metadata)
-        result = self.forward(sentence, historical_data)
+        result = super().__call__(sentence, historical_data)
 
         if result[0].item() == 0:
             return []
@@ -241,3 +239,5 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
     @staticmethod
     def _metadata2text(metadata: list[dict[str, Any]]) -> str:
         return ".".join([text['metadata']['text'] for text in metadata])
+
+    __call__ = evaluate_sentence

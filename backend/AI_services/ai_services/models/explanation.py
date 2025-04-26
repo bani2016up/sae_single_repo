@@ -96,5 +96,3 @@ class ExplanationLLM(LLMInterface):
             temperature=temperature
         )
         return response[0]['generated_text']
-
-    forward = __call__
