@@ -1,7 +1,6 @@
 from copy import deepcopy
 from typing import Callable, List, Dict, TypeAlias, Union
 
-from .models.fact_checker import FactCheckerPipeline
 from .interfaces import PromptInterface
 from .static import FACT_CHECKER_PROMPT
 from .typing import PromptType
@@ -9,7 +8,6 @@ from .typing import PromptType
 __all__ = (
     "PromptGeneratorType",
     "FactCheckerPrompt",
-    "build_fact_check_model",
 )
 
 PromptGeneratorType: TypeAlias = Union[PromptInterface, Callable[[..., str], PromptType]]
@@ -66,7 +64,3 @@ class FactCheckerPrompt(PromptInterface):
         else:
             raise ValueError("The last item in the prompt list must be a dictionary.")
         return prompt
-
-
-def build_fact_check_model() -> FactCheckerPipeline:
-    raise NotImplementedError("The build_fact_check_model function is not yet implemented.")
