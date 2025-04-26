@@ -10,14 +10,16 @@ Interfaces:
 import functools
 
 from abc import ABC, abstractmethod, ABCMeta
-from typing import Any, List, Dict, Literal, Self
+from typing import List, Dict, Self
 
 from .response import SuggestionResponse
+from .typing import DeviceType, PromptType, DocumentMetadataType
 
 __all__ = (
     "DeviceAwareModel",
     "FactCheckerInterface",
-    "VectorStorageInterface"
+    "VectorStorageInterface",
+    "PromptInterface"
 )
 
 
@@ -47,7 +49,7 @@ class DeviceAwareModel(ABC, metaclass=_CatchKIMeta):
     Defines a common interface for managing device placement.
     """
 
-    def __init__(self, *, device: Literal["cpu", "cuda"] = "cuda"):
+    def __init__(self, *, device: DeviceType = "cuda"):
         """
         Initializes the model on the specified device.
 
@@ -57,7 +59,7 @@ class DeviceAwareModel(ABC, metaclass=_CatchKIMeta):
         self._device = device
 
     @abstractmethod
-    def to(self, device: Literal["cpu", "cuda"]) -> Self:
+    def to(self, device: DeviceType) -> Self:
         """
         Transfers the model to the specified device.
 
@@ -73,7 +75,7 @@ class DeviceAwareModel(ABC, metaclass=_CatchKIMeta):
         ...
 
     @property
-    def device(self) -> Literal["cpu", "cuda"]:
+    def device(self) -> DeviceType:
         """
         Returns the current device of the model.
 
@@ -123,7 +125,12 @@ class VectorStorageInterface(ABC):
     """
 
     @abstractmethod
-    def add_document(self, index: int, text: str, metadata: Dict[str, Any]) -> None:
+    def add_document(
+        self,
+        index: int,
+        text: str,
+        metadata: DocumentMetadataType
+    ) -> None:
         """
         Store a single document or fact vector in the index.
 
@@ -135,7 +142,12 @@ class VectorStorageInterface(ABC):
         ...
 
     @abstractmethod
-    def add_documents(self, ids: List[int], texts: List[str], metadata: List[Dict[str, Any]]) -> None:
+    def add_documents(
+        self,
+        ids: List[int],
+        texts: List[str],
+        metadata: List[DocumentMetadataType]
+    ) -> None:
         """
         Store multiple documents or fact vectors in bulk.
 
@@ -147,7 +159,13 @@ class VectorStorageInterface(ABC):
         ...
 
     @abstractmethod
-    def search(self, text: str, *, k: int = 5, threshold: float = 1.0) -> List[Dict[str, Any]]:
+    def search(
+        self,
+        text: str,
+        *,
+        k: int = 5,
+        threshold: float = 1.0
+    ) -> List[DocumentMetadataType]:
         """
         Perform a semantic similarity search for the given query.
 
@@ -199,4 +217,10 @@ class VectorStorageInterface(ABC):
         Args:
             filepath (str): Destination path for saving the index.
         """
+        ...
+
+
+class PromptInterface(ABC):
+    @abstractmethod
+    def __call__(self, **kwargs) -> PromptType:
         ...
