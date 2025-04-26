@@ -1,14 +1,17 @@
 from transformers import pipeline
-from typing import Union
+from typing import Union, Callable, TypeAlias
 
 from ..interfaces import DeviceAwareModel
 from ..utils import FactCheckerPrompt
 from ..interfaces import PromptInterface
-from ..typing import DeviceType, PromptGeneratorType
+from ..typing import DeviceType, PromptType
 
 __all__ = (
     "ExplanationLLM",
+    "PromptGeneratorType"
 )
+
+PromptGeneratorType: TypeAlias = Union[PromptInterface, Callable[[..., str], PromptType]]
 
 
 class ExplanationLLM(DeviceAwareModel):
