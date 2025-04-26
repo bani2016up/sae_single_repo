@@ -12,6 +12,7 @@ import pickle
 from typing import Any, Callable, Dict, List
 
 from .interfaces import VectorStorageInterface
+from .typing import DocumentMetadataType
 
 __all__ = (
     "VectorStorage",
@@ -48,7 +49,7 @@ class VectorStorage(VectorStorageInterface):
         self.index_factory = index_factory
         self.embedder = embedder
         self.index = faiss.index_factory(self.dim, self.index_factory)
-        self._metadata: Dict[int, Dict[str, Any]] = {}
+        self._metadata: Dict[int, DocumentMetadataType] = {}
 
     def train(self, vectors: np.ndarray) -> None:
         """
@@ -60,7 +61,7 @@ class VectorStorage(VectorStorageInterface):
         if hasattr(self.index, 'is_trained') and not self.index.is_trained:
             self.index.train(vectors)
 
-    def add_document(self, index: int, text: str, metadata: Dict[str, Any]) -> None:
+    def add_document(self, index: int, text: str, metadata: DocumentMetadataType) -> None:
         """
         Add a single document to the vector storage.
         Args:
@@ -83,7 +84,7 @@ class VectorStorage(VectorStorageInterface):
         self,
         ids: List[int],
         texts: List[str],
-        metadata: List[Dict[str, Any]]
+        metadata: List[DocumentMetadataType]
     ) -> None:
         """
         Add multiple documents to the vector storage.
@@ -105,7 +106,7 @@ class VectorStorage(VectorStorageInterface):
         for idx, md in zip(ids, metadata):
             self._metadata[idx] = md
 
-    def search(self, text: str, *, k: int = 5, threshold: float = 1.0) -> List[Dict[str, Any]]:
+    def search(self, text: str, *, k: int = 5, threshold: float = 1.0) -> List[DocumentMetadataType]:
         """
         Search for the nearest neighbors of the given text in the vector storage.
         Args:
