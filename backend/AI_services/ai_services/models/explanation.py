@@ -13,9 +13,11 @@ __all__ = (
 class ExplanationLLM(LLMInterface):
     """
     A class for generating explanations using a language model.
-    Inherits from DeviceAwareModel to manage device placement.
-    This class uses the Hugging Face Transformers library to load and utilize the model.
-    It provides methods for generating explanations based on a claim and evidence.
+    This class wraps a language model pipeline and provides methods
+    to generate explanations based on a claim and evidence.
+    It uses a prompt generator to create the input prompt for the model.
+    The class is designed to be flexible and allows for easy customization
+    of the prompt structure.
     """
 
     def __init__(
