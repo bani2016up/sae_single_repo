@@ -8,7 +8,6 @@ app = FastAPI()
 router = APIRouter()
 
 
-
 api_version = "/v1"
 
 routes = APIRouter(prefix="/auth_api", redirect_slashes=False)

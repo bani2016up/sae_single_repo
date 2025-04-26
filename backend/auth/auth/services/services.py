@@ -30,9 +30,7 @@ if not JWT_SECRET:
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
-async def verify_token(
-    request: Request
-):
+async def verify_token(request: Request):
     auth_cookies = request.cookies.get("access_token")
     if not auth_cookies:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -98,8 +96,10 @@ async def logout(payload):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 async def give_account_info(payload):
     return payload
+
 
 async def delete_all_cookies():
     try:
