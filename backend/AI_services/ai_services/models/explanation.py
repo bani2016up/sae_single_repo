@@ -16,6 +16,17 @@ class ExplanationLLM(DeviceAwareModel):
         torch_dtype: str = "auto",
         device_map: str = "auto",
     ) -> None:
+        """
+        Initializes the ExplanationLLM model.
+
+        Args:
+            model (str): The model name or path.
+            device (Literal["cuda", "cpu"]): Target device for model operations.
+            prompt_generator (Union[PromptInterface, Callable]): A callable or instance of
+                    PromptInterface for generating prompts.
+            torch_dtype (str): Data type for the model.
+            device_map (str): Device map for the model.
+        """
         super().__init__(device=device)
         if prompt_generator is None:
             prompt_generator = FactCheckerPrompt()
@@ -53,6 +64,19 @@ class ExplanationLLM(DeviceAwareModel):
         do_sample: bool = False,
         temperature: float = 0.1
     ) -> str:
+        """
+        Generates an explanation for the given claim and evidence.
+
+        Args:
+            claim (str): The claim to be evaluated.
+            evidence (str): The evidence to support or refute the claim.
+            max_new_tokens (int): Maximum number of tokens to generate.
+            do_sample (bool): Whether to sample from the distribution.
+            temperature (float): Sampling temperature.
+
+        Returns:
+            str: The generated explanation.
+        """
         prompt = self.prompt_generator(claim, evidence)
         response = self.llm(
             prompt,
