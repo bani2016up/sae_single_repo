@@ -4,10 +4,12 @@ from tqdm.auto import tqdm
 from typing import Any, List, Iterable, Union
 from transformers import RobertaForSequenceClassification, RobertaTokenizer
 
+from .explanation import ExplanationLLM
 from ..interfaces import (
     FactCheckerInterface,
     DeviceAwareModel,
-    VectorStorageInterface
+    VectorStorageInterface,
+    LLMInterface
 )
 from ..response import SuggestionResponse, SuggestionPosition
 from ..processing import Pipeline, get_default_paragraph_processing_pipeline
@@ -93,8 +95,6 @@ class FactCheckingModel(DeviceAwareModel):
             outputs = self.model(**inputs)
         return outputs
 
-    forward = __call__  # just in case
-
 
 class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
     def __init__(
@@ -103,15 +103,20 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         model_name: str = "Dzeniks/roberta-fact-check",
         sentence_processing_pipeline: Pipeline = None,
         paragraph_processing_pipeline: Pipeline = None,
+        llm: LLMInterface = None,
         *,
         storage_search_threshold: float = 1.0,
         storage_search_k: int = 5,
+        max_new_tokens: int = 256,
+        do_sample: bool = False,
+        temperature: float = 0.1,
         device: DeviceType = "cuda",
         tokenizer_kwargs: dict = None,
         model_kwargs: dict = None,
         use_tqdm: bool = False,
         paragraph_processing_device: DeviceType = "cuda",
-        sentence_processing_device: DeviceType = "cpu"
+        sentence_processing_device: DeviceType = "cpu",
+        llm_device: DeviceType = "cuda"
     ):
         """
         Initializes the FactCheckerPipeline with a pre-trained model and tokenizer.
@@ -122,11 +127,18 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
             sentence_processing_pipeline (Pipeline): The pipeline for processing sentences.
             paragraph_processing_pipeline (Pipeline): The pipeline for processing paragraphs.
             device (str): The device to use for computation ("cuda" or "cpu").
+            paragraph_processing_device (str): Device for paragraph processing ("cuda" or "cpu").
+            sentence_processing_device (str): Device for sentence processing ("cuda" or "cpu").
+            llm_device (str): Device for the language model ("cuda" or "cpu").
             tokenizer_kwargs (dict): Additional arguments for the tokenizer.
             model_kwargs (dict): Additional arguments for the model.
             use_tqdm (bool): Whether to use tqdm for progress bars.
-            paragraph_processing_device (str): Device for paragraph processing ("cuda" or "cpu").
-            sentence_processing_device (str): Device for sentence processing ("cuda" or "cpu").
+            llm (LLMInterface): The language model for generating explanations.
+            storage_search_threshold (float): The threshold for searching in the vector storage.
+            storage_search_k (int): The number of nearest neighbors to search for in the vector storage.
+            max_new_tokens (int): Maximum number of tokens to generate for the explanation.
+            do_sample (bool): Whether to sample from the distribution.
+            temperature (float): Sampling temperature for the explanation generation.
         """
         super().__init__(
             model_name=model_name,
@@ -136,35 +148,50 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
             use_tqdm=use_tqdm
         )
 
+        self.llm = (llm or ExplanationLLM()).to(llm_device)
         self.paragraph_processing_pipeline = (
                 paragraph_processing_pipeline or get_default_paragraph_processing_pipeline()
-        )
+        ).to(paragraph_processing_device)
         self.sentence_processing_pipeline = (
                 sentence_processing_pipeline or Pipeline()
-        )
+        ).to(sentence_processing_device)
+
         self.vector_storage = vector_storage
-
-        self.paragraph_processing_pipeline.to(paragraph_processing_device)
-        self.sentence_processing_pipeline.to(sentence_processing_device)
-
         self.storage_search_k = storage_search_k
         self.storage_search_threshold = storage_search_threshold
+        self.max_new_tokens = max_new_tokens
+        self.do_sample = do_sample
+        self.temperature = temperature
 
     def evaluate_sentence(self, sentence: str, context: str = "") -> List[SuggestionResponse]:
+        """
+        Evaluate a single sentence.
+
+        Args:
+            sentence (str): The sentence to evaluate.
+            context (str): Additional context for the evaluation.
+        Returns:
+            List[SuggestionResponse]: A list of SuggestionResponse instances for the evaluated sentence.
+        """
         # HACK
         # FIXME: context? for what?
         # TODO: fact checking with NER
-        # TODO: explanation
         # TODO: in_original=True
         metadata = self.vector_storage.search(
             sentence,
             k=self.storage_search_k,
             threshold=self.storage_search_threshold
         )
+
         if len(metadata) == 0:
             return []
+
         historical_data = self._metadata2text(metadata)
-        result = self.forward(sentence, historical_data)
+        result = super().__call__(sentence, historical_data)
+
+        if result[0].item() == 0:
+            return []
+
         return [
             SuggestionResponse(
                 fact=sentence,
@@ -174,11 +201,26 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
                     end_char_index=len(sentence),
                     in_original=False
                 ),
-                explanation="",
+                explanation=self.llm(
+                    claim=sentence,
+                    evidence=historical_data,
+                    max_new_tokens=self.max_new_tokens,
+                    do_sample=self.do_sample,
+                    temperature=self.temperature
+                )
             )
         ]
 
     def evaluate_text(self, text: str, *, context: str = "") -> List[SuggestionResponse]:
+        """
+        Evaluate a given text and return a list of suggestion responses.
+
+        Args:
+            text (str): The text to evaluate.
+            context (str): Additional context for the evaluation.
+        Returns:
+            List[SuggestionResponse]: A list of SuggestionResponse instances for the evaluated text.
+        """
         sentences = self.paragraph_processing_pipeline(text)
         if self.use_tqdm:
             sentences = tqdm(
@@ -197,3 +239,5 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
     @staticmethod
     def _metadata2text(metadata: list[dict[str, Any]]) -> str:
         return ".".join([text['metadata']['text'] for text in metadata])
+
+    __call__ = evaluate_sentence

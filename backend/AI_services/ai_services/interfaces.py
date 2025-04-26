@@ -19,7 +19,8 @@ __all__ = (
     "DeviceAwareModel",
     "FactCheckerInterface",
     "VectorStorageInterface",
-    "PromptInterface"
+    "PromptInterface",
+    "LLMInterface"
 )
 
 
@@ -36,9 +37,14 @@ class _CatchKIMeta(ABCMeta):
         return wrapper
 
     def __new__(mcs, name, bases, namespace):
-        for attr_name, attr_val in namespace.items():
+        for attr_name, attr_val in list(namespace.items()):
             if (attr_name.startswith("__call__")) or (callable(attr_val) and not attr_name.startswith("__")):
                 namespace[attr_name] = mcs._catch_keyboard_interrupt(attr_val)
+
+        if "__call__" in namespace and "forward" not in namespace:
+            # usually the other way round, but I'm too lazy to redo it
+            namespace["forward"] = namespace["__call__"]
+
         return super().__new__(mcs, name, bases, namespace)
 
 
@@ -223,4 +229,26 @@ class VectorStorageInterface(ABC):
 class PromptInterface(ABC):
     @abstractmethod
     def __call__(self, **kwargs) -> PromptType:
+        ...
+
+
+class LLMInterface(DeviceAwareModel):
+    """
+    Abstract base class for LLM (Large Language Model) interfaces.
+    This class defines the interface for LLMs, including methods for
+    generating text and managing device placement.
+    """
+
+    @abstractmethod
+    def __call__(self, *args, **kwargs) -> str:
+        """
+        Generates text based on the provided input arguments.
+
+        Args:
+            *args: Positional arguments for the model.
+            **kwargs: Keyword arguments for the model.
+
+        Returns:
+            str: The generated text.
+        """
         ...
