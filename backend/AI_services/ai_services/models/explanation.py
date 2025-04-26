@@ -33,7 +33,7 @@ class ExplanationLLM(DeviceAwareModel):
             model (str): The model name or path.
             device (Literal["cuda", "cpu"]): Target device for model operations.
             prompt_generator (Union[PromptInterface, Callable]): A callable or instance of
-                    PromptInterface for generating prompts.
+                PromptInterface for generating prompts.
             torch_dtype (str): Data type for the model.
             device_map (str): Device map for the model.
         """
