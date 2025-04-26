@@ -5,8 +5,18 @@ from ..interfaces import DeviceAwareModel
 from ..utils import FactCheckerPrompt
 from ..interfaces import PromptInterface
 
+__all__ = (
+    "ExplanationLLM",
+)
 
 class ExplanationLLM(DeviceAwareModel):
+    """
+    A class for generating explanations using a language model.
+    Inherits from DeviceAwareModel to manage device placement.
+    This class uses the Hugging Face Transformers library to load and utilize the model.
+    It provides methods for generating explanations based on a claim and evidence.
+    """
+
     def __init__(
         self,
         model: str = "Open-Orca/Mistral-7B-OpenOrca",
