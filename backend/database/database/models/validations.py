@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
-from database.database import Base
+from ..database.database import Base
 
 
 class Validation(Base):
