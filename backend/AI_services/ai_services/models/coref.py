@@ -14,7 +14,7 @@ __all__ = ("CorefResolver",)
 
 class CorefResolver(DeviceAwareModel):
     """
-    Coreference resolver using the LingMessCoref(dy default) model.
+    Coreference resolver using the LingMessCoref(by default) model.
     Inherits from DeviceAwareModel.
     """
 
