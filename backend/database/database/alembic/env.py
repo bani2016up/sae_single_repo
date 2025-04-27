@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import os
 
 # Import your Base and models
-from database.database import Base
+from db.database import Base
 from models.users import User
 from models.documents import Document
 from models.validations import Validation

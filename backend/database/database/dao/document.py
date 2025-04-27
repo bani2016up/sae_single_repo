@@ -3,13 +3,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
 from sqlalchemy import Result, ScalarResult
 
-from ..database.dao import TemplateDAO, construct_dao
+from ..db.dao import TemplateDAO, construct_dao
 
 
 _document_dao = construct_dao(Document)
 
 class _DocumentDAO(_document_dao):
-    async def get_documents_by_user_id(self, user_id: int, sess: AsyncSession) -> ScalarResult[Document]:
+
+    @staticmethod
+    async def get_documents_by_user_id(user_id: int, sess: AsyncSession) -> ScalarResult[Document]:
         """
         Returns a list of document parameters for a given user ID.
 
