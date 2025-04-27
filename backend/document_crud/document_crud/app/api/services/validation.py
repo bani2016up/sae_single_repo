@@ -88,7 +88,7 @@ async def get_validation_errors(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Validation not found"
         )
-    return DocumentValidationErrorsResponse(errors=validation.errors)
+    return DocumentValidationErrorsResponse(errors=validation.awaitable_attrs.errors)
 
 
 async def create_validation(
