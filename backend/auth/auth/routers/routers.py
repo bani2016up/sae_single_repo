@@ -21,12 +21,12 @@ async def sign_up(user: UserRegister):
     return await register(user)
 
 
-@auth_router.post("/sign_in_with_password")
-async def sign_in_with_password(user: UserLogin):
+@auth_router.post("/sign_in")
+async def sign_in(user: UserLogin):
     return await login(user)
 
 
-@auth_router.post("/sign_out")
+@auth_router.delete("/sign_out")
 async def sign_out(payload: dict = Depends(verify_token)):
     return await logout(payload)
 
