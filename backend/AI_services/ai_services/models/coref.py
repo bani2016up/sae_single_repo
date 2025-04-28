@@ -6,6 +6,7 @@ The main interface is the __call__ method, which replaces all mentions in each c
 cluster with the first mention (antecedent).
 """
 
+import logging
 from fastcoref import LingMessCoref
 from ..interfaces import DeviceAwareModel
 from ..typing import DeviceType
@@ -33,6 +34,7 @@ class CorefResolver(DeviceAwareModel):
             enable_progress_bar (bool): Whether to show the progress bar during inference.
             device (DeviceType): Device to load the model on ("cpu" or "cuda").
         """
+        logging.getLogger("fastcoref").setLevel(logging.WARNING)
         super().__init__(device=device)
         self.model_name = model_name
         self.enable_progress_bar = enable_progress_bar
