@@ -7,11 +7,20 @@ cluster with the first mention (antecedent).
 """
 
 import logging
+
+from dataclasses import dataclass
 from fastcoref import LingMessCoref
+
 from ..interfaces import DeviceAwareModel
 from ..typing import DeviceType
 
 __all__ = ("CorefResolver",)
+
+
+@dataclass(frozen=True, repr=True, kw_only=True)
+class CorefResponse(object):
+    text: str
+    antecedents: list[str]
 
 
 class CorefResolver(DeviceAwareModel):
@@ -49,7 +58,7 @@ class CorefResolver(DeviceAwareModel):
         self.enable_progress_bar = enable_progress_bar
         self.model = LingMessCoref(model_name, enable_progress_bar=enable_progress_bar, device=device)
 
-    def __call__(self, text: str) -> str:
+    def __call__(self, text: str) -> CorefResponse:
         """
         Replace all mentions in each coreference cluster with the first mention (antecedent).
 
@@ -57,18 +66,19 @@ class CorefResolver(DeviceAwareModel):
             text (str): The input text to process.
 
         Returns:
-            str: The text with all coreference clusters replaced by their antecedents.
+            CorefResponse: A dataclass containing the modified text and a list of antecedents.
         """
         result = self.model.predict(text)
         clusters = result.get_clusters(as_strings=False)
 
         replacements = []
+        antecedents = []
         for cluster in clusters:
             start0, end0 = cluster[0]
             antecedent = text[start0:end0]
             for start, end in cluster[1:]:
                 replacements.append((start, end, antecedent))
-
+            antecedents.append(antecedent)
 
         replacements.sort(key=lambda x: x[0], reverse=True)
 
@@ -76,7 +86,8 @@ class CorefResolver(DeviceAwareModel):
         for start, end, rep in replacements:
             new_text[start:end] = rep
 
-        return "".join(new_text)
+        new_text = "".join(new_text)
+        return CorefResponse(text=new_text, antecedents=antecedents)
 
     def to(self, device: DeviceType) -> "CorefResolver":
         """
