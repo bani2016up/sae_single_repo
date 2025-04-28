@@ -250,11 +250,10 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
                 sentences = sentences[i:]
                 break
 
-        sentences[0] = sentences[0].removeprefix(self.context_token + " ")
-
         if len(sentences) == 0:
             return []
 
+        sentences[0] = sentences[0].removeprefix(self.context_token + " ")
         results = []
         for sentence in tqdm(sentences, desc="Evaluating sentences", disable=not self.use_tqdm):
             sentence = self.sentence_processing_pipeline(sentence)
