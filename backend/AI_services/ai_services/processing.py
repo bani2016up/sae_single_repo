@@ -1,5 +1,4 @@
 import inspect
-import torch
 import re
 
 from collections import OrderedDict
@@ -8,6 +7,7 @@ from tqdm.auto import tqdm
 
 from .interfaces import DeviceAwareModel
 from .typing import DeviceType
+from .models.coref import CorefResolver
 
 __all__ = (
     "Pipeline",
@@ -108,8 +108,18 @@ class Pipeline(DeviceAwareModel):
             return self.pipeline[item]
         raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
 
+
 def get_default_paragraph_processing_pipeline() -> Pipeline:
     return Pipeline(
         sentence_reg=re.compile(r"(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=[.?])\s").split,
         device="cpu"
+    )
+
+
+def get_default_coref_pipeline(*, device: DeviceType = "cuda") -> Pipeline:
+    return Pipeline(
+        steps=[
+            ("coref", CorefResolver()),
+        ],
+        device=device
     )
