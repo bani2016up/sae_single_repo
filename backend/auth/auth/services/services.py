@@ -3,29 +3,7 @@ from ..models.users import UserLogin, UserRegister
 from fastapi import Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from jose import jwt, JWTError, ExpiredSignatureError
-from dotenv import load_dotenv
-from os import getenv
-
-
-load_dotenv()
-
-
-SUPABASE_URL = getenv("SUPABASE_URL")
-if not SUPABASE_URL:
-    raise ValueError("SUPABASE_URL is not set in the .env file")
-
-SUPABASE_KEY = getenv("SUPABASE_KEY")
-if not SUPABASE_KEY:
-    raise ValueError("SUPABASE_KEY is not set in the .env file")
-
-JWT_ALGORITHM = getenv("JWT_ALGORITHM")
-if not JWT_ALGORITHM:
-    raise ValueError("JWT_ALGORITHM is not set in the .env file")
-
-JWT_SECRET = getenv("JWT_SECRET")
-if not JWT_SECRET:
-    raise ValueError("JWT_SECRET is not set in the .env file")
-
+from ..config.cfg import SUPABASE_KEY,SUPABASE_URL,JWT_SECRET,JWT_ALGORITHM
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 

@@ -4,20 +4,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from ..services.services import verify_token, delete_all_cookies
 from jose import ExpiredSignatureError
 from supabase import create_client, Client
-from dotenv import load_dotenv
-from os import getenv
-
-load_dotenv()
-
-
-SUPABASE_URL = getenv("SUPABASE_URL")
-if not SUPABASE_URL:
-    raise ValueError("SUPABASE_URL is not set in the .env file")
-
-SUPABASE_KEY = getenv("SUPABASE_KEY")
-if not SUPABASE_KEY:
-    raise ValueError("SUPABASE_KEY is not set in the .env file")
-
+from ..config.cfg import SUPABASE_KEY,SUPABASE_URL
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
