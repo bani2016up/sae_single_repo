@@ -14,11 +14,19 @@ from fastcoref import LingMessCoref
 from ..interfaces import DeviceAwareModel
 from ..typing import DeviceType
 
-__all__ = ("CorefResolver",)
+__all__ = ("CorefResolver", "CorefResponse")
 
 
 @dataclass(frozen=True, repr=True, kw_only=True)
 class CorefResponse(object):
+    """
+    A dataclass representing the response of the coreference resolution.
+    It contains the modified text and a list of antecedents.
+    
+    Attributes:
+        text (str): The modified text with coreferences resolved.
+        antecedents (list[str]): A list of antecedents for the coreferences.
+    """
     text: str
     antecedents: list[str]
 
