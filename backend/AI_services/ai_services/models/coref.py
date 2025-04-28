@@ -1,5 +1,5 @@
 """
-Coreference resolution using LingMessCoref.
+Coreference resolution using LingMessCoref(by default).
 
 This module provides a class for coreference resolution that inherits from DeviceAwareModel.
 The main interface is the __call__ method, which replaces all mentions in each coreference
@@ -12,10 +12,10 @@ from ..typing import DeviceType
 
 __all__ = ("CorefResolver",)
 
+
 class CorefResolver(DeviceAwareModel):
     """
     Coreference resolver using the LingMessCoref(by default) model.
-    Inherits from DeviceAwareModel.
     """
 
     def __init__(
@@ -36,7 +36,7 @@ class CorefResolver(DeviceAwareModel):
         super().__init__(device=device)
         self.model_name = model_name
         self.enable_progress_bar = enable_progress_bar
-        self.model = LingMessCoref(model_name, enable_progress_bar=enable_progress_bar)
+        self.model = LingMessCoref(model_name, enable_progress_bar=enable_progress_bar, device=device)
 
     def __call__(self, text: str) -> str:
         """
@@ -58,7 +58,7 @@ class CorefResolver(DeviceAwareModel):
             for start, end in cluster[1:]:
                 replacements.append((start, end, antecedent))
 
-        # Sort replacements by their start index in reverse order to avoid shifting issues
+
         replacements.sort(key=lambda x: x[0], reverse=True)
 
         new_text = list(text)
@@ -78,6 +78,6 @@ class CorefResolver(DeviceAwareModel):
             CorefResolver: self
         """
         self._device = device
-        if hasattr(self.model, "to"):
-            self.model.to(device)
+        if hasattr(self.model.model, "to"):
+            self.model.model.to(device)
         return self
