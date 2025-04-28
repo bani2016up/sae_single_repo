@@ -37,7 +37,7 @@ class Pipeline(DeviceAwareModel):
             self.register(name, func)
 
     def _func2device(self, func: Callable):
-        if isinstance(func, (DeviceAwareModel, torch.nn.Module)):
+        if hasattr(func, "to"):
             func.to(self.device)
         return func
 
@@ -58,15 +58,14 @@ class Pipeline(DeviceAwareModel):
             self._func2device(func)
         return self
 
-    def __call__(self, data: Any):
-        iterator = self.pipeline.items()
-        if self.use_tqdm:
-            iterator = tqdm(
-                iterator,
-                desc="Processing",
-                total=len(self.pipeline),
-                unit="step"
-            )
+    def __call__(self, data: Any, **kwargs) -> Any:
+        iterator = tqdm(
+            self.pipeline.items(),
+            desc="Processing",
+            total=len(self.pipeline),
+            unit="step",
+            disable=not self.use_tqdm,
+        )
         for name, func in iterator:
             data = func(data)
         return data
@@ -95,6 +94,19 @@ class Pipeline(DeviceAwareModel):
         body = "\n".join(lines)
         return f"Pipeline(\n{body}\n)"
 
+    def __len__(self):
+        return len(self.pipeline)
+
+    def __contains__(self, name: str):
+        return name in self.pipeline
+
+    def __iter__(self):
+        return iter(self.pipeline.items())
+
+    def __getattr__(self, item):
+        if item in self.pipeline:
+            return self.pipeline[item]
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
 
 def get_default_paragraph_processing_pipeline() -> Pipeline:
     return Pipeline(
