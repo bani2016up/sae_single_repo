@@ -117,7 +117,8 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         paragraph_processing_device: DeviceType = "cuda",
         sentence_processing_device: DeviceType = "cpu",
         llm_device: DeviceType = "cuda",
-        context_token: str = "</CONTEXT>"
+        context_token: str = "</CONTEXT>",
+        get_explanation: bool = True
     ):
         """
         Initializes the FactCheckerPipeline with a pre-trained model and tokenizer.
@@ -141,6 +142,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
             do_sample (bool): Whether to sample from the distribution.
             temperature (float): Sampling temperature for the explanation generation.
             context_token (str): Token to separate context from the sentence.
+            get_explanation (bool): Whether to generate an explanation.
         """
         super().__init__(
             model_name=model_name,
@@ -165,6 +167,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         self.do_sample = do_sample
         self.temperature = temperature
         self.context_token = context_token
+        self.get_explanation = get_explanation
 
     def _predict(self, claim: str) -> List[SuggestionResponse]:
         # TODO: fact checking with NER
@@ -180,6 +183,16 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
 
         if result[0].item() == 0:
             return []
+        explanation = ""
+
+        if self.get_explanation:
+            explanation = self.llm(
+                claim=claim,
+                evidence=historical_data,
+                max_new_tokens=self.max_new_tokens,
+                do_sample=self.do_sample,
+                temperature=self.temperature
+            )
 
         return [
             SuggestionResponse(
@@ -190,13 +203,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
                     end_char_index=len(claim),
                     in_original=False
                 ),
-                explanation=self.llm(
-                    claim=claim,
-                    evidence=historical_data,
-                    max_new_tokens=self.max_new_tokens,
-                    do_sample=self.do_sample,
-                    temperature=self.temperature
-                )
+                explanation=explanation
             )
         ]
 
