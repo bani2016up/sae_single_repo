@@ -19,12 +19,21 @@ class CorefResolver(DeviceAwareModel):
     Coreference resolver using the LingMessCoref(by default) model.
     """
 
+    @staticmethod
+    def _set_fastcoref_logger(enabled: bool) -> None:
+        """
+        Enable or disable the fastcoref logger.
+        """
+        level = logging.INFO if enabled else logging.WARNING
+        logging.getLogger("fastcoref").setLevel(level)
+
     def __init__(
         self,
         model_name: str = "biu-nlp/lingmess-coref",
         *,
         enable_progress_bar: bool = False,
-        device: DeviceType = "cpu"
+        device: DeviceType = "cpu",
+        use_logger: bool = False
     ):
         """
         Initialize the coreference model.
@@ -34,7 +43,7 @@ class CorefResolver(DeviceAwareModel):
             enable_progress_bar (bool): Whether to show the progress bar during inference.
             device (DeviceType): Device to load the model on ("cpu" or "cuda").
         """
-        logging.getLogger("fastcoref").setLevel(logging.WARNING)
+        self._set_fastcoref_logger(use_logger)
         super().__init__(device=device)
         self.model_name = model_name
         self.enable_progress_bar = enable_progress_bar
