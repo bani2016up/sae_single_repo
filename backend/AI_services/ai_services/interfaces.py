@@ -36,9 +36,33 @@ class _CatchKIMeta(ABCMeta):
 
         return wrapper
 
+    @staticmethod
+    def _catch_keyboard_interrupt_classmethod(func):
+        @functools.wraps(func)
+        def wrapper(cls, *args, **kwargs):
+            try:
+                return func(cls, *args, **kwargs)
+            except KeyboardInterrupt:
+                print(f"Interrupted in {func.__qualname__}")
+
+        return wrapper
+
     def __new__(mcs, name, bases, namespace):
         for attr_name, attr_val in list(namespace.items()):
-            if (attr_name.startswith("__call__")) or (callable(attr_val) and not attr_name.startswith("__")):
+            if attr_name.startswith("__"):
+                continue
+
+            if isinstance(attr_val, staticmethod):
+                original_func = attr_val.__func__
+                wrapped = mcs._catch_keyboard_interrupt(original_func)
+                namespace[attr_name] = staticmethod(wrapped)
+
+            elif isinstance(attr_val, classmethod):
+                original_func = attr_val.__func__
+                wrapped = mcs._catch_keyboard_interrupt_classmethod(original_func)
+                namespace[attr_name] = classmethod(wrapped)
+
+            elif callable(attr_val):
                 namespace[attr_name] = mcs._catch_keyboard_interrupt(attr_val)
 
         if "__call__" in namespace and "forward" not in namespace:

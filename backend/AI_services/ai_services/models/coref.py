@@ -1,22 +1,28 @@
 """
-Coreference resolution using LingMessCoref(by default).
-
-This module provides a class for coreference resolution that inherits from DeviceAwareModel.
-The main interface is the __call__ method, which replaces all mentions in each coreference
-cluster with the first mention (antecedent).
+    Coreference resolution using the LingMessCoref model.
+    This module provides a class `CorefResolver` that uses the LingMessCoref model
 """
 
 import logging
+import re
+
+from typing import List
 from fastcoref import LingMessCoref
+
 from ..interfaces import DeviceAwareModel
 from ..typing import DeviceType
+from ..sentence import SentenceProposal, Token
 
 __all__ = ("CorefResolver",)
 
 
 class CorefResolver(DeviceAwareModel):
     """
-    Coreference resolver using the LingMessCoref(by default) model.
+    Coreference resolution using the LingMessCoref model.
+    This class provides methods to resolve coreferences in a given text.
+    It uses the LingMessCoref model for coreference resolution and provides
+    methods to tokenize the text, replace coreferences with their canonical mentions,
+    and return the resolved sentences as `SentenceProposal` objects.
     """
 
     @staticmethod
@@ -33,7 +39,8 @@ class CorefResolver(DeviceAwareModel):
         *,
         enable_progress_bar: bool = False,
         device: DeviceType = "cpu",
-        use_logger: bool = False
+        use_logger: bool = False,
+        splitter: str = r"(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=[.?])\s"
     ):
         """
         Initialize the coreference model.
@@ -42,41 +49,46 @@ class CorefResolver(DeviceAwareModel):
             model_name (Optional[str]): The name or path of the Coref model. Defaults to "biu-nlp/lingmess-coref".
             enable_progress_bar (bool): Whether to show the progress bar during inference.
             device (DeviceType): Device to load the model on ("cpu" or "cuda").
+            use_logger (bool): Whether to enable the fastcoref logger.
         """
-        self._set_fastcoref_logger(use_logger)
         super().__init__(device=device)
+        self._set_fastcoref_logger(use_logger)
         self.model_name = model_name
         self.enable_progress_bar = enable_progress_bar
         self.model = LingMessCoref(model_name, enable_progress_bar=enable_progress_bar, device=device)
+        self.splitter = re.compile(splitter)
 
-    def __call__(self, text: str) -> str:
+    def __call__(self, text: str) -> List[SentenceProposal]:
         """
-        Replace all mentions in each coreference cluster with the first mention (antecedent).
-
+        Perform coreference resolution on the input text.
+        This method tokenizes the text, resolves coreferences,
+        and returns a list of `SentenceProposal` objects.
         Args:
-            text (str): The input text to process.
-
+            text (str): The input text to resolve coreferences in.
         Returns:
-            str: The text with all coreference clusters replaced by their antecedents.
+            List[SentenceProposal]: A list of `SentenceProposal` objects representing the resolved sentences.
         """
         result = self.model.predict(text)
-        clusters = result.get_clusters(as_strings=False)
 
-        replacements = []
-        for cluster in clusters:
-            start0, end0 = cluster[0]
-            antecedent = text[start0:end0]
-            for start, end in cluster[1:]:
-                replacements.append((start, end, antecedent))
+        clusters = result.get_clusters()
+        clusters_spans = result.get_clusters(as_strings=False)
 
+        antecedents = [mention for cluster in clusters for mention in cluster if " " in mention]
+        tokens_grouped_by_sentences = self._tokenize_text_by_sentences(text, antecedents)
 
-        replacements.sort(key=lambda x: x[0], reverse=True)
+        tokens_with_replacements = self._replace_coreference_by_spans(
+            tokens_grouped_by_sentences, clusters, clusters_spans
+        )
 
-        new_text = list(text)
-        for start, end, rep in replacements:
-            new_text[start:end] = rep
+        sentence_proposals = []
+        for sentence_index, sentence_tokens in enumerate(tokens_with_replacements):
+            sentence_proposal = SentenceProposal(
+                tokens=sentence_tokens,
+                index=sentence_index
+            )
+            sentence_proposals.append(sentence_proposal)
 
-        return "".join(new_text)
+        return sentence_proposals
 
     def to(self, device: DeviceType) -> "CorefResolver":
         """
@@ -92,3 +104,91 @@ class CorefResolver(DeviceAwareModel):
         if hasattr(self.model.model, "to"):
             self.model.model.to(device)
         return self
+
+    @staticmethod
+    def _tokenize_text_with_antecedents(text: str, antecedents: List[str]) -> List[Token]:
+        escaped_antecedents = sorted(
+            (re.escape(antecedent) for antecedent in antecedents),
+            key=len,
+            reverse=True
+        )
+        pattern = (
+            rf"({'|'.join(escaped_antecedents)})"
+            r"|(\w+[^\w\s]*)"
+            r"|([^\w\s])"
+        )
+        compiled_pattern = re.compile(pattern)
+
+        tokens: List[Token] = []
+
+        for match in compiled_pattern.finditer(text):
+            token_text = match.group(0)
+            token_start, token_end = match.span(0)
+            tokens.append(Token(token_text, token_start, token_end))
+
+        return tokens
+
+    def _tokenize_text_by_sentences(
+        self,
+        text: str,
+        antecedents: List[str]
+    ) -> List[List[Token]]:
+        tokens_grouped_by_sentences = []  # type: List[List[Token]]
+        last_split_position = 0
+
+        for match in self.splitter.finditer(text):
+            sentence_end_position = match.start() + 1
+            sentence_text = text[last_split_position:sentence_end_position]
+
+            tokens_in_sentence = self._tokenize_text_with_antecedents(sentence_text, antecedents)
+
+            for token in tokens_in_sentence:
+                token.start += last_split_position
+                token.end += last_split_position
+
+            tokens_grouped_by_sentences.append(tokens_in_sentence)
+            last_split_position = match.end()
+
+        if last_split_position < len(text):
+            sentence_text = text[last_split_position:]
+            tokens_in_last_sentence = self._tokenize_text_with_antecedents(sentence_text, antecedents)
+
+            for token in tokens_in_last_sentence:
+                token.start += last_split_position
+                token.end += last_split_position
+
+            tokens_grouped_by_sentences.append(tokens_in_last_sentence)
+
+        return tokens_grouped_by_sentences
+
+    @staticmethod
+    def _replace_coreference_by_spans(
+        tokens_grouped_by_sentence: List[List[Token]],
+        coreference_clusters: List[List[str]],
+        coreference_clusters_spans: List[List[tuple]]
+    ) -> List[List[Token]]:
+
+        start_position_to_canonical_mention = {}
+        for cluster_mentions, cluster_spans in zip(coreference_clusters, coreference_clusters_spans):
+            canonical_mention = cluster_mentions[0]
+            for span in cluster_spans:
+                start_position = span[0]
+                start_position_to_canonical_mention[start_position] = canonical_mention
+
+        for sentence_tokens in tokens_grouped_by_sentence:
+            for token in sentence_tokens:
+                if token.start in start_position_to_canonical_mention:
+                    canonical_mention = start_position_to_canonical_mention[token.start]
+
+                    matching_span = next(
+                        span
+                        for spans_list in coreference_clusters_spans
+                        for span in spans_list
+                        if span[0] == token.start
+                    )
+
+                    original_span_length = matching_span[1] - matching_span[0]
+                    suffix_text = token.text[original_span_length:]
+                    token.text = canonical_mention + suffix_text
+
+        return tokens_grouped_by_sentence

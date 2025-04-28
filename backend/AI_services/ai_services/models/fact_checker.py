@@ -1,7 +1,7 @@
 import torch
 
 from tqdm.auto import tqdm
-from typing import Any, List, Iterable, Union, Dict
+from typing import List, Iterable, Union
 from transformers import RobertaForSequenceClassification, RobertaTokenizer
 
 from .explanation import ExplanationLLM
@@ -14,6 +14,7 @@ from ..interfaces import (
 from ..response import SuggestionResponse, SuggestionPosition
 from ..processing import Pipeline, get_default_paragraph_processing_pipeline
 from ..typing import DeviceType, DocumentMetadataType
+from ..sentence import SentenceProposal
 
 __all__ = (
     "FactCheckingModel",
@@ -97,6 +98,13 @@ class FactCheckingModel(DeviceAwareModel):
 
 
 class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
+    """
+    A flexible, modular pipeline for evaluating claims using a pre-trained fact-checking model.
+    It integrates evidence retrieval via vector storage, generates explanations with
+    a language model, and supports scalable, customizable processing for
+    diverse fact-checking and NLP tasks.
+    """
+
     def __init__(
         self,
         vector_storage: VectorStorageInterface,
@@ -169,17 +177,15 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         self.context_token = context_token
         self.get_explanation = get_explanation
 
-    def _predict(self, claim: str) -> List[SuggestionResponse]:
+    def _predict(self, claim: str, *, is_original: bool = False) -> List[SuggestionResponse]:
         # TODO: fact checking with NER
-        # TODO: in_original=True
-
         metadata = self.vector_storage.search(
-            claim,
+            str(claim),
             k=self.storage_search_k,
             threshold=self.storage_search_threshold
         )
         historical_data = self._metadata2text(metadata)
-        result = super().__call__(claim, historical_data)
+        result = super().__call__(str(claim), historical_data)
 
         if result[0].item() == 0:
             return []
@@ -187,7 +193,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
 
         if self.get_explanation:
             explanation = self.llm(
-                claim=claim,
+                claim=str(claim),
                 evidence=historical_data,
                 max_new_tokens=self.max_new_tokens,
                 do_sample=self.do_sample,
@@ -195,15 +201,11 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
             )
 
         return [
-            SuggestionResponse(
-                fact=claim,
+            self._sentence2response(
+                claim=claim,
                 is_correct=result[0].item(),
-                position=SuggestionPosition(
-                    start_char_index=0,
-                    end_char_index=len(claim),
-                    in_original=False
-                ),
-                explanation=explanation
+                explanation=explanation,
+                is_original=is_original
             )
         ]
 
@@ -225,7 +227,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
             return []
 
         sentence = sentence_with_context[-1]
-        result = self._predict(sentence)
+        result = self._predict(sentence, is_original=False)
 
         if result is None:
             return []
@@ -259,7 +261,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
             sentence = self.sentence_processing_pipeline(sentence)
             if len(sentence) == 0:
                 continue
-            result = self._predict(sentence)
+            result = self._predict(sentence, is_original=True)
             if result is not None:
                 results.extend(result)
         return results
@@ -267,5 +269,34 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
     @staticmethod
     def _metadata2text(metadata: List[DocumentMetadataType]) -> str:
         return ".".join([text['metadata']['text'] for text in metadata])
+
+    @staticmethod
+    def _sentence2response(
+        claim: Union[SentenceProposal, str],
+        is_correct: Union[int, bool],
+        explanation: str,
+        is_original: bool = False
+    ) -> SuggestionResponse:
+        if isinstance(claim, SentenceProposal):
+            return SuggestionResponse(
+                fact=str(claim),
+                is_correct=is_correct,
+                position=SuggestionPosition(
+                    start_char_index=claim.tokens[0].start,
+                    end_char_index=claim.tokens[-1].end,
+                    in_original=is_original
+                ),
+                explanation=explanation
+            )
+        return SuggestionResponse(
+            fact=claim,
+            is_correct=is_correct,
+            position=SuggestionPosition(
+                start_char_index=0,
+                end_char_index=len(claim),
+                in_original=False
+            ),
+            explanation=explanation
+        )
 
     __call__ = evaluate_text
