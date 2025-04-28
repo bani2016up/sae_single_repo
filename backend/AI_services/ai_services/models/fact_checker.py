@@ -210,7 +210,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         Returns:
             List[SuggestionResponse]: A list of SuggestionResponse instances for the evaluated sentence.
         """
-        sentence_with_context = f"{context}\n\n{self.context_token}{sentence}"
+        sentence_with_context = f"{context}\n\n{self.context_token} {sentence}"
         sentence_with_context = self.sentence_processing_pipeline(sentence_with_context)
         sentence_with_context = sentence_with_context.split(self.context_token)
 
@@ -235,16 +235,22 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         Returns:
             List[SuggestionResponse]: A list of SuggestionResponse instances for the evaluated text.
         """
-        sentences_with_context = f"{context}\n\n{self.context_token}{text}"
-        # FIXME: context
-        sentences = self.paragraph_processing_pipeline(sentences_with_context)
+        sentences_with_context = f"{context}\n\n{self.context_token} {text}"
+        sentences = self.paragraph_processing_pipeline(sentences_with_context)  # type: list[str]
+
+        for i in range(len(sentences)):
+            if sentences[i].startswith(self.context_token):
+                sentences = sentences[i:]
+                break
+
+        sentences[0] = sentences[0].removeprefix(self.context_token + " ")
 
         if len(sentences) == 0:
             return []
 
         results = []
         for sentence in tqdm(sentences, desc="Evaluating sentences", disable=not self.use_tqdm):
-            sentence = sentence.strip()
+            sentence = self.sentence_processing_pipeline(sentence)
             if len(sentence) == 0:
                 continue
             result = self._predict(sentence)
