@@ -1,7 +1,7 @@
 import torch
 
 from tqdm.auto import tqdm
-from typing import Any, List, Iterable, Union
+from typing import Any, List, Iterable, Union, Dict
 from transformers import RobertaForSequenceClassification, RobertaTokenizer
 
 from .explanation import ExplanationLLM
@@ -13,7 +13,7 @@ from ..interfaces import (
 )
 from ..response import SuggestionResponse, SuggestionPosition
 from ..processing import Pipeline, get_default_paragraph_processing_pipeline
-from ..typing import DeviceType
+from ..typing import DeviceType, DocumentMetadataType
 
 __all__ = (
     "FactCheckingModel",
@@ -116,7 +116,8 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         use_tqdm: bool = False,
         paragraph_processing_device: DeviceType = "cuda",
         sentence_processing_device: DeviceType = "cpu",
-        llm_device: DeviceType = "cuda"
+        llm_device: DeviceType = "cuda",
+        context_token: str = "</CONTEXT>"
     ):
         """
         Initializes the FactCheckerPipeline with a pre-trained model and tokenizer.
@@ -139,6 +140,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
             max_new_tokens (int): Maximum number of tokens to generate for the explanation.
             do_sample (bool): Whether to sample from the distribution.
             temperature (float): Sampling temperature for the explanation generation.
+            context_token (str): Token to separate context from the sentence.
         """
         super().__init__(
             model_name=model_name,
@@ -162,6 +164,41 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         self.max_new_tokens = max_new_tokens
         self.do_sample = do_sample
         self.temperature = temperature
+        self.context_token = context_token
+
+    def _predict(self, claim: str) -> List[SuggestionResponse]:
+        # TODO: fact checking with NER
+        # TODO: in_original=True
+
+        metadata = self.vector_storage.search(
+            claim,
+            k=self.storage_search_k,
+            threshold=self.storage_search_threshold
+        )
+        historical_data = self._metadata2text(metadata)
+        result = super().__call__(claim, historical_data)
+
+        if result[0].item() == 0:
+            return []
+
+        return [
+            SuggestionResponse(
+                fact=claim,
+                is_correct=result[0].item(),
+                position=SuggestionPosition(
+                    start_char_index=0,
+                    end_char_index=len(claim),
+                    in_original=False
+                ),
+                explanation=self.llm(
+                    claim=claim,
+                    evidence=historical_data,
+                    max_new_tokens=self.max_new_tokens,
+                    do_sample=self.do_sample,
+                    temperature=self.temperature
+                )
+            )
+        ]
 
     def evaluate_sentence(self, sentence: str, context: str = "") -> List[SuggestionResponse]:
         """
@@ -173,43 +210,20 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         Returns:
             List[SuggestionResponse]: A list of SuggestionResponse instances for the evaluated sentence.
         """
-        # HACK
-        # FIXME: context? for what?
-        # TODO: fact checking with NER
-        # TODO: in_original=True
-        metadata = self.vector_storage.search(
-            sentence,
-            k=self.storage_search_k,
-            threshold=self.storage_search_threshold
-        )
+        sentence_with_context = f"{context}\n\n{self.context_token}{sentence}"
+        sentence_with_context = self.sentence_processing_pipeline(sentence_with_context)
+        sentence_with_context = sentence_with_context.split(self.context_token)
 
-        if len(metadata) == 0:
+        if len(sentence_with_context) == 0:
             return []
 
-        historical_data = self._metadata2text(metadata)
-        result = super().__call__(sentence, historical_data)
+        sentence = sentence_with_context[-1]
+        result = self._predict(sentence)
 
-        if result[0].item() == 0:
+        if result is None:
             return []
 
-        return [
-            SuggestionResponse(
-                fact=sentence,
-                is_correct=result[0].item(),
-                position=SuggestionPosition(
-                    start_char_index=0,
-                    end_char_index=len(sentence),
-                    in_original=False
-                ),
-                explanation=self.llm(
-                    claim=sentence,
-                    evidence=historical_data,
-                    max_new_tokens=self.max_new_tokens,
-                    do_sample=self.do_sample,
-                    temperature=self.temperature
-                )
-            )
-        ]
+        return result
 
     def evaluate_text(self, text: str, *, context: str = "") -> List[SuggestionResponse]:
         """
@@ -221,23 +235,25 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         Returns:
             List[SuggestionResponse]: A list of SuggestionResponse instances for the evaluated text.
         """
-        sentences = self.paragraph_processing_pipeline(text)
-        if self.use_tqdm:
-            sentences = tqdm(
-                sentences,
-                desc="Processing sentences",
-                total=len(sentences),
-                unit="sentence"
-            )
-        result = []
-        for sentence in sentences:
-            sentence = self.sentence_processing_pipeline(sentence)
-            if len(sentence) > 0:
-                result.extend(self.evaluate_sentence(sentence, context=context))
-        return result
+        sentences_with_context = f"{context}\n\n{self.context_token}{text}"
+        # FIXME: context
+        sentences = self.paragraph_processing_pipeline(sentences_with_context)
+
+        if len(sentences) == 0:
+            return []
+
+        results = []
+        for sentence in tqdm(sentences, desc="Evaluating sentences", disable=not self.use_tqdm):
+            sentence = sentence.strip()
+            if len(sentence) == 0:
+                continue
+            result = self._predict(sentence)
+            if result is not None:
+                results.extend(result)
+        return results
 
     @staticmethod
-    def _metadata2text(metadata: list[dict[str, Any]]) -> str:
+    def _metadata2text(metadata: List[DocumentMetadataType]) -> str:
         return ".".join([text['metadata']['text'] for text in metadata])
 
-    __call__ = evaluate_sentence
+    __call__ = evaluate_text
