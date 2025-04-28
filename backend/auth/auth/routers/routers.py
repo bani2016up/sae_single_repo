@@ -10,6 +10,7 @@ from ..services.services import (
 )
 from ..models.users import UserLogin, UserRegister
 from fastapi.responses import JSONResponse
+from ..config.cfg import DEV_MODE
 
 
 auth_router = APIRouter()
@@ -33,10 +34,9 @@ async def sign_out(payload: dict = Depends(verify_token)):
 
 @auth_router.get("/account_check")
 async def check_account(payload: dict = Depends(verify_token)):
-    return await give_account_info(payload)
+    return give_account_info(payload)
 
-
-# USE ONLY FOR DEBUGGING OR AS ЗАТЫЧКА ON BUGS
-@auth_router.get("/delete_all_cookies")
-async def delete_all_cookies():
-    return await delete_all_cookies()
+if DEV_MODE:
+    @auth_router.get("/delete_all_cookies")
+    async def delete_all_cookies():
+        return await delete_all_cookies()

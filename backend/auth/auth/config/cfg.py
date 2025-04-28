@@ -1,22 +1,21 @@
 from dotenv import load_dotenv
 from os import getenv
+from typing import Final, TypeVar, Any, Optional
 
 
 load_dotenv()
 
+def get_env(env_var: str) -> Any:
+    x: Optional[Any] = getenv(env_var)
+    if x is not None:
+        return x
+    raise ValueError(f"{env_var} is not set in the .env file")
 
-SUPABASE_URL = getenv("SUPABASE_URL")
-if not SUPABASE_URL:
-    raise ValueError("SUPABASE_URL is not set in the .env file")
+SUPABASE_URL: Final[str]  = get_env("SUPABASE_URL")
+SUPABASE_KEY: Final[str]  = get_env("SUPABASE_KEY")
+JWT_ALGORITHM: Final[str]  = get_env("JWT_ALGORITHM")
+JWT_SECRET: Final[str] = get_env("JWT_SECRET")
+PORT: Final[int] = get_env("PORT")
+HOST: Final[str] = get_env("HOST")
 
-SUPABASE_KEY = getenv("SUPABASE_KEY")
-if not SUPABASE_KEY:
-    raise ValueError("SUPABASE_KEY is not set in the .env file")
-
-JWT_ALGORITHM = getenv("JWT_ALGORITHM")
-if not JWT_ALGORITHM:
-    raise ValueError("JWT_ALGORITHM is not set in the .env file")
-
-JWT_SECRET = getenv("JWT_SECRET")
-if not JWT_SECRET:
-    raise ValueError("JWT_SECRET is not set in the .env file")
+DEV_MODE: Final[bool] = getenv("DEV_MODE") or False

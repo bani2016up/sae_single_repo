@@ -8,7 +8,7 @@ from ..config.cfg import SUPABASE_KEY,SUPABASE_URL,JWT_SECRET,JWT_ALGORITHM
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
-async def verify_token(request: Request):
+async def verify_token(request: Request) -> dict:
     auth_cookies = request.cookies.get("access_token")
     if not auth_cookies:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -35,7 +35,7 @@ async def register(user: UserRegister):
     # Users should login by themselves after registration, because I hate them.
 
 
-async def login(user: UserLogin):
+async def login(user: UserLogin) -> JSONResponse:
     try:
         res = supabase.auth.sign_in_with_password(
             {"email": user.email, "password": user.password}
@@ -64,7 +64,7 @@ async def login(user: UserLogin):
         raise HTTPException(status_code=401, detail=f"Login failed - Error: {e}")
 
 
-async def logout(payload):
+async def logout(payload: dict) -> JSONResponse:
     try:
         supabase.auth.sign_out()
         response = JSONResponse(content={"message": "Logged out"})
@@ -75,11 +75,11 @@ async def logout(payload):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-async def give_account_info(payload):
+def give_account_info(payload: dict) -> dict:
     return payload
 
 
-async def delete_all_cookies():
+async def delete_all_cookies() -> JSONResponse:
     try:
         response = JSONResponse(content={"message": "Logged out"})
         response.delete_cookie("access_token")

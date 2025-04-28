@@ -2,6 +2,7 @@ import uvicorn
 from fastapi import FastAPI, APIRouter
 from auth.routers.routers import auth_router as AuthRouter
 from auth.middlewares.auto_refresh import AutoRefreshTokenMiddleware
+from auth.config.cfg import HOST,PORT
 
 app = FastAPI()
 
@@ -18,4 +19,4 @@ app.add_middleware(AutoRefreshTokenMiddleware)
 app.include_router(routes)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, host=HOST, port=PORT)
