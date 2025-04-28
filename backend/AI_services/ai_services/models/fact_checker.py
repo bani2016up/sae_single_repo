@@ -277,25 +277,24 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         explanation: str,
         is_original: bool = False
     ) -> SuggestionResponse:
-        if isinstance(claim, str):
+        if isinstance(claim, SentenceProposal):
             return SuggestionResponse(
-                fact=claim,
+                fact=str(claim),
                 is_correct=is_correct,
                 position=SuggestionPosition(
-                    start_char_index=0,
-                    end_char_index=len(claim),
-                    in_original=False
+                    start_char_index=claim.tokens[0].start,
+                    end_char_index=claim.tokens[-1].end,
+                    in_original=is_original
                 ),
                 explanation=explanation
             )
-
         return SuggestionResponse(
-            fact=str(claim),
+            fact=claim,
             is_correct=is_correct,
             position=SuggestionPosition(
-                start_char_index=claim.tokens[0].start,
-                end_char_index=claim.tokens[-1].end,
-                in_original=is_original
+                start_char_index=0,
+                end_char_index=len(claim),
+                in_original=False
             ),
             explanation=explanation
         )
