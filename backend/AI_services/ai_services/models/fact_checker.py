@@ -12,7 +12,7 @@ from ..interfaces import (
     LLMInterface
 )
 from ..response import SuggestionResponse, SuggestionPosition
-from ..processing import Pipeline, get_default_paragraph_processing_pipeline
+from ..preprocessing import Pipeline, get_default_paragraph_processing_pipeline
 from ..typing import DeviceType, DocumentMetadataType
 from ..sentence import SentenceProposal
 
