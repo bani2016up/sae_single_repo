@@ -12,13 +12,26 @@ NEW_PAGE_REG = re.compile(r'\s*(\d+|[ivxlcdm]+)\s*')
 WHITESPACES_REG = re.compile(r'[ \t]+')
 PARAGRAPHS_REG = re.compile(r'\n{2,}')
 LINE_ENDING = ('.', '?', '!', '"', ':', ';')
+KEYWORDS = (
+    "Cambridge University Press",
+    "Cambridge Histories Online",
+    "https",
+    ""
+    "GDZ",
+    "RGASPI"
+)
 
+def check_keywords(text, *, keywords=KEYWORDS) -> bool:
+    for keyword in keywords:
+        if keyword in text:
+            return True
+    return False
 
 def strip_headers_footers(text):
     lines = text.splitlines()
     cleaned_lines = []
     for line in lines:
-        if ("Cambridge University Press" in line) or ("Cambridge Histories Online" in line):
+        if check_keywords(line):
             continue
         if NEW_PAGE_REG.fullmatch(line.strip().lower()):
             continue
