@@ -2,7 +2,7 @@ import inspect
 import re
 
 from collections import OrderedDict
-from typing import Iterator, List, Tuple, Any, Callable
+from typing import Iterator, List, Tuple, Any, Callable, TypeVar, Generic
 from tqdm.auto import tqdm
 
 from .interfaces import DeviceAwareModel
@@ -14,8 +14,11 @@ __all__ = (
     "get_default_paragraph_processing_pipeline"
 )
 
+T = TypeVar("T")
+U = TypeVar("U")
 
-class Pipeline(DeviceAwareModel):
+
+class Pipeline(Generic[T, U], DeviceAwareModel):
     """
     A class to create a processing pipeline for data.
     This class allows for the registration of multiple processing steps,
@@ -97,7 +100,7 @@ class Pipeline(DeviceAwareModel):
             self._func2device(func)
         return self
 
-    def __call__(self, data: Any) -> Any:
+    def __call__(self, data: T) -> U:
         """
         Execute the pipeline on the provided data.
         The data is processed through each registered step in the order they were added.
@@ -205,7 +208,7 @@ def get_default_paragraph_processing_pipeline() -> Pipeline:
     Returns:
         Pipeline: The initialized pipeline with sentence segmentation step.
     """
-    return Pipeline(
+    return Pipeline[str, str](
         sentence_reg=re.compile(r"(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=[.?])\s").split,
         device="cpu"
     )
@@ -227,7 +230,7 @@ def get_default_coref_pipeline(*, device: DeviceType = "cuda") -> Pipeline:
     Returns:
         Pipeline: The initialized pipeline with coreference resolution step.
     """
-    return Pipeline(
+    return Pipeline[str, str](
         steps=[
             ("coref", CorefResolver()),
         ],

@@ -165,7 +165,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
                 paragraph_processing_pipeline or get_default_paragraph_processing_pipeline()
         ).to(paragraph_processing_device)
         self.sentence_processing_pipeline = (
-                sentence_processing_pipeline or Pipeline()
+                sentence_processing_pipeline or Pipeline[str, str]()
         ).to(sentence_processing_device)
 
         self.vector_storage = vector_storage
