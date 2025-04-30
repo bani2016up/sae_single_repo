@@ -2,7 +2,7 @@ import inspect
 import re
 
 from collections import OrderedDict
-from typing import Iterator, List, Tuple, Any, Callable, TypeVar, Generic
+from typing import get_args, Iterator, List, Tuple, Any, Callable, TypeVar, Generic
 from tqdm.auto import tqdm
 
 from .interfaces import DeviceAwareModel
@@ -150,7 +150,18 @@ class Pipeline(Generic[T, U], DeviceAwareModel):
                     func_str = f"{cls_name}()"
             lines.append(f"\t({name}): {func_str}")
         body = "\n".join(lines)
-        return f"Pipeline(\n{body}\n)"
+
+        type_args = None
+        orig = getattr(self, "__orig_class__", None)
+        if orig:
+            type_args = get_args(orig)
+
+        name_t, name_u = "T", "U"
+
+        if type_args and len(type_args) == 2:
+            name_t = getattr(type_args[0], "__name__", str(type_args[0]))
+            name_u = getattr(type_args[1], "__name__", str(type_args[1]))
+        return f"Pipeline<{name_t}, {name_u}>(\n{body}\n)"
 
     def __len__(self):
         """
