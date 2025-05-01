@@ -1,5 +1,7 @@
 import re
 
+from typing import Final, Tuple
+
 __all__ = (
     'strip_headers_footers',
     'join_broken_lines',
@@ -8,11 +10,11 @@ __all__ = (
     'clean_and_paragraphize',
 )
 
-NEW_PAGE_REG = re.compile(r'\s*(\d+|[ivxlcdm]+)\s*')
-WHITESPACES_REG = re.compile(r'[ \t]+')
-PARAGRAPHS_REG = re.compile(r'\n{2,}')
-LINE_ENDING = ('.', '?', '!', '"', ':', ';')
-KEYWORDS = (
+NEW_PAGE_REG: Final[re.Pattern] = re.compile(r'\s*(\d+|[ivxlcdm]+)\s*')
+WHITESPACES_REG: Final[re.Pattern] = re.compile(r'[ \t]+')
+PARAGRAPHS_REG: Final[re.Pattern] = re.compile(r'\n{2,}')
+LINE_ENDING: Final[Tuple] = ('.', '?', '!', '"', ':', ';')
+KEYWORDS: Final[Tuple] = (
     "Cambridge University Press",
     "Cambridge Histories Online",
     "https",
@@ -21,11 +23,13 @@ KEYWORDS = (
     "RGASPI"
 )
 
+
 def check_keywords(text, *, keywords=KEYWORDS) -> bool:
     for keyword in keywords:
         if keyword in text:
             return True
     return False
+
 
 def strip_headers_footers(text):
     lines = text.splitlines()
