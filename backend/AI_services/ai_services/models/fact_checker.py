@@ -84,7 +84,7 @@ class FactCheckingModel(DeviceAwareModel):
             return_tensors="pt",
             truncation=True,
             padding=True,
-            max_length=512
+            max_length=512 # TODO: use config from __init__
         ).to(self.device)
 
         with torch.no_grad():

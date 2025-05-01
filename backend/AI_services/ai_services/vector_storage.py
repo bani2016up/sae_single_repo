@@ -128,7 +128,11 @@ class VectorStorage(VectorStorageInterface):
         """
         if self.embedder is None:
             raise ValueError("Embedder function must be provided.")
-        query_vec = np.asarray([self.embedder(text)], dtype="float32")
+        query_vec = np.asarray(
+            [
+                self.embedder(text, show_progress_bar=False)
+            ], dtype="float32"
+        )
         distances, ids = self.index.search(query_vec, k)
         results: List[Dict[str, Any]] = []
 
