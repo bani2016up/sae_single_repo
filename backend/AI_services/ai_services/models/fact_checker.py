@@ -287,7 +287,14 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
 
     @staticmethod
     def _metadata2text(metadata: List[DocumentMetadataType]) -> str:
-        return ".".join([text['metadata']['text'] for text in metadata])
+        valid_texts = []
+        for item in metadata:
+            if isinstance(item, dict) \
+                    and 'metadata' in item \
+                    and isinstance(item['metadata'], dict) \
+                    and 'text' in item['metadata']:
+                valid_texts.append(item['metadata']['text'])
+        return ".".join(valid_texts)
 
     @staticmethod
     def _sentence2response(
