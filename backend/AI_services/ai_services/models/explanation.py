@@ -49,7 +49,8 @@ class ExplanationLLM(LLMInterface):
             torch_dtype=torch_dtype,
             device_map=device_map
         )
-        self.llm.tokenizer.to(device)
+        if hasattr(self.llm.tokenizer, "to"):
+            self.llm.tokenizer.to(device)
         self.llm.model.to(device)
 
     def to(self, device: DeviceType) -> None:
