@@ -8,6 +8,7 @@ from tqdm.auto import tqdm
 from .interfaces import DeviceAwareModel
 from .typing import DeviceType
 from .models.coref import CorefResolver
+from .sentence import SentenceProposal
 
 __all__ = (
     "Pipeline",
@@ -243,7 +244,7 @@ def get_default_coref_pipeline(*, device: DeviceType = "cuda") -> Pipeline:
     Returns:
         Pipeline: The initialized pipeline with coreference resolution step.
     """
-    return Pipeline[str, str](
+    return Pipeline[str, List[SentenceProposal]](
         steps=[
             ("coref", CorefResolver()),
         ],
