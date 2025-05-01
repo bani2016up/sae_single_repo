@@ -1,4 +1,4 @@
-from transformers import pipeline
+from transformers import pipeline, Pipeline
 from typing import Union
 
 from ..utils import FactCheckerPrompt, PromptGeneratorType
@@ -43,8 +43,8 @@ class ExplanationLLM(LLMInterface):
         super().__init__(device=device)
         if prompt_generator is None:
             prompt_generator = FactCheckerPrompt()
-        self.prompt_generator = prompt_generator
-        self.llm = pipeline(
+        self.prompt_generator: PromptGeneratorType = prompt_generator
+        self.llm: Pipeline = pipeline(
             "text-generation", model=model,
             torch_dtype=torch_dtype,
             device_map=device_map

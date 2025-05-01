@@ -42,11 +42,11 @@ class FactCheckingModel(DeviceAwareModel):
             use_tqdm (bool): Whether to use tqdm for progress bars.
         """
         super().__init__(device=device)
-        self.use_tqdm = use_tqdm
-        self.tokenizer = RobertaTokenizer.from_pretrained(
+        self.use_tqdm: bool = use_tqdm
+        self.tokenizer: RobertaTokenizer = RobertaTokenizer.from_pretrained(
             model_name, **(tokenizer_kwargs or {})
         )
-        self.model = RobertaForSequenceClassification.from_pretrained(
+        self.model: RobertaForSequenceClassification = RobertaForSequenceClassification.from_pretrained(
             model_name, **(model_kwargs or {})
         )
         self.model.eval()

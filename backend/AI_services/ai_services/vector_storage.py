@@ -47,10 +47,11 @@ class VectorStorage(VectorStorageInterface):
             index_factory (str): The index factory string for FAISS.
             embedder (Callable[[str], np.ndarray]): A function to convert text to vectors.
         """
-        self.dim = dim
-        self.index_factory = index_factory
-        self.embedder = embedder
-        self.index = faiss.index_factory(self.dim, self.index_factory)
+        self.dim: int = dim
+        self.embedder: Callable[..., Union[torch.Tensor, np.ndarray]] = embedder
+        # <class ‘faiss.swigfaiss.IndexIVFFlat’>, but if you explicitly specify the type
+        # the IDE outputs a lot of warnings
+        self.index = faiss.index_factory(self.dim, index_factory)
         self._metadata: Dict[int, DocumentMetadataType] = {}
 
     def train(self, vectors: np.ndarray) -> None:

@@ -31,8 +31,8 @@ class Pipeline(Generic[T, U], DeviceAwareModel):
 
     def __init__(
         self,
-        steps: List[Tuple[str, Callable]] = None,
-        use_tqdm=False,
+        steps: List[Tuple[str, Callable[..., ...]]] = None,
+        use_tqdm: bool = False,
         *,
         device: DeviceType = "cpu",
         **kwargs
@@ -50,7 +50,7 @@ class Pipeline(Generic[T, U], DeviceAwareModel):
         super().__init__(device=device)
         if steps is None:
             steps = []
-        self.use_tqdm = use_tqdm
+        self.use_tqdm: bool = use_tqdm
         self.pipeline: OrderedDict[str, Any] = OrderedDict()
 
         for name, func in steps:

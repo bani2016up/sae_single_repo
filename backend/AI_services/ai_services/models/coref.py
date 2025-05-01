@@ -55,13 +55,13 @@ class CorefResolver(DeviceAwareModel):
         super().__init__(device=device)
         self._set_fastcoref_logger(use_logger)
         # tokens are not used in the current implementation
-        self.system_tokens = [context_token]  # type: List[str]
-        self.model_name = model_name
-        self.enable_progress_bar = enable_progress_bar
-        self.model = LingMessCoref(model_name, enable_progress_bar=enable_progress_bar, device=device)
-        self.splitter = re.compile(splitter)
-        self._context_token = context_token
-        self._context = ""
+        self.system_tokens: List[str] = [context_token]
+        self.model_name: str = model_name
+        self.enable_progress_bar: bool = enable_progress_bar
+        self.model: LingMessCoref = LingMessCoref(model_name, enable_progress_bar=enable_progress_bar, device=device)
+        self.splitter: re.Pattern = re.compile(splitter)
+        self._context_token: str = context_token
+        self._context: str = ""
 
     def __call__(self, text: str) -> List[SentenceProposal]:
         """
