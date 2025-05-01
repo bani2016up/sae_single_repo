@@ -203,8 +203,9 @@ class Pipeline(Generic[T, U], DeviceAwareModel):
         Returns:
             Callable: The function associated with the specified step name.
         """
-        if item in self.pipeline:
-            return self.pipeline[item]
+        for func in self.pipeline.values():
+            if hasattr(func, item):
+                return getattr(func, item)
         raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
 
 
