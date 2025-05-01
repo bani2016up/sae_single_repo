@@ -9,7 +9,9 @@ import faiss
 import numpy as np
 import pickle
 
-from typing import Any, Callable, Dict, List
+from typing import Any, Dict, List
+from tqdm.auto import tqdm
+from sentence_transformers import SentenceTransformer
 
 from .interfaces import VectorStorageInterface
 from .typing import DocumentMetadataType
@@ -28,7 +30,7 @@ class VectorStorage(VectorStorageInterface):
     Attributes:
         dim (int): The dimension of the vectors.
         index_factory (str): The index factory string for FAISS.
-        embedder (Callable[[str], np.ndarray]): A function to convert text to vectors.
+        embedder (SentenceTransformer): A function to convert text to vectors.
         index (faiss.Index): The FAISS index for vector storage.
     """
 
@@ -36,7 +38,7 @@ class VectorStorage(VectorStorageInterface):
         self,
         dim: int,
         index_factory: str = "IVF100,Flat",
-        embedder: Callable[[str], np.ndarray] = None
+        embedder: SentenceTransformer = None
     ):
         """
         Initialize the VectorStorage with the specified parameters.
@@ -98,10 +100,15 @@ class VectorStorage(VectorStorageInterface):
         if self.embedder is None:
             raise ValueError("Embedder function must be provided.")
 
-        vectors = np.asarray([self.embedder(t) for t in texts], dtype="float32")
+        vectors = np.asarray(
+            [
+                self.embedder(t, show_progress_bar=False) for t in tqdm(texts)
+            ], dtype="float32"
+        )
         self.train(vectors)
 
         np_ids = np.array(ids, dtype="int64")
+
         self.index.add_with_ids(vectors, np_ids)
         for idx, md in zip(ids, metadata):
             self._metadata[idx] = md
