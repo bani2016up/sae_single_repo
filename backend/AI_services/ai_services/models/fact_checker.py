@@ -66,9 +66,10 @@ class FactCheckingModel(DeviceAwareModel):
 
     def __call__(
         self,
-        claim: Union[str, Iterable[str]],
-        evidence: Union[str, Iterable[str]]
+        claim: str,
+        evidence: str
     ) -> torch.Tensor:
+        # TODO: docs fix
         """
         Processes the claim and evidence using the tokenizer and model.
         Args:
@@ -79,21 +80,18 @@ class FactCheckingModel(DeviceAwareModel):
         Raises:
             ValueError: If claim and evidence have different lengths.
         """
-        if isinstance(claim, str):
-            claim = [claim]
-        if isinstance(evidence, str):
-            evidence = [evidence]
-        if len(claim) != len(evidence):
-            raise ValueError("Claim and evidence must have the same length.")
-
-        inputs = self.tokenizer(
+        inputs = self.tokenizer.encode_plus(
             claim,
             evidence,
-            return_tensors="pt"
+            return_tensors="pt",
+            truncation=True,
+            padding=True,
+            max_length=512
         ).to(self.device)
 
         with torch.no_grad():
             outputs = self.model(**inputs)
+
         return outputs
 
 
@@ -128,6 +126,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         context_token: str = "</CONTEXT>",
         get_explanation: bool = True
     ):
+        # TODO: ..._device -> None
         """
         Initializes the FactCheckerPipeline with a pre-trained model and tokenizer.
 
@@ -185,9 +184,11 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
             threshold=self.storage_search_threshold
         )
         historical_data = self._metadata2text(metadata)
-        result = super().__call__(str(claim), historical_data)
+        if len(historical_data) == 0:
+            return []
+        result = super().__call__(str(claim), str(historical_data))
 
-        if result[0].item() == 0:
+        if torch.argmax(result[0], dim=1).item() == 0:
             return []
         explanation = ""
 
@@ -203,7 +204,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         return [
             self._sentence2response(
                 claim=claim,
-                is_correct=result[0].item(),
+                is_correct=False,
                 explanation=explanation,
                 is_original=is_original
             )
@@ -219,14 +220,15 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         Returns:
             List[SuggestionResponse]: A list of SuggestionResponse instances for the evaluated sentence.
         """
-        sentence_with_context = f"{context}\n\n{self.context_token} {sentence}"
-        sentence_with_context = self.sentence_processing_pipeline(sentence_with_context)
-        sentence_with_context = sentence_with_context.split(self.context_token)
+        # FIXME: coref context tokens
+        # sentence_with_context = f"{context}\n\n{self.context_token} {sentence}"
+        sentence_with_context = self.paragraph_processing_pipeline(sentence)[0]
+        # sentence_with_context = sentence_with_context.split(self.context_token)
 
         if len(sentence_with_context) == 0:
             return []
 
-        sentence = sentence_with_context[-1]
+        # sentence = self.sentence_processing_pipeline(sentence_with_context[-1])
         result = self._predict(sentence, is_original=False)
 
         if result is None:
@@ -235,6 +237,8 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         return result
 
     def evaluate_text(self, text: str, *, context: str = "") -> List[SuggestionResponse]:
+        # TODO: fix context tokens
+        # TODO: check works
         """
         Evaluate a given text and return a list of suggestion responses.
 
