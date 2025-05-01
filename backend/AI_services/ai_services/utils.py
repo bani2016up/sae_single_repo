@@ -10,6 +10,7 @@ __all__ = (
     "FactCheckerPrompt",
 )
 
+# can't be placed in typing.py because of circular import (.interfaces -> .typing -> .interfaces)
 PromptGeneratorType: TypeAlias = Union[PromptInterface, Callable[[..., str], PromptType]]
 
 

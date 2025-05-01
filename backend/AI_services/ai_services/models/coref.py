@@ -40,7 +40,8 @@ class CorefResolver(DeviceAwareModel):
         enable_progress_bar: bool = False,
         device: DeviceType = "cpu",
         use_logger: bool = False,
-        splitter: str = r"(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=[.?])\s"
+        splitter: str = r"(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=[.?])\s",
+        context_token: str = "</CONTEXT>",
     ):
         """
         Initialize the coreference model.
@@ -53,42 +54,91 @@ class CorefResolver(DeviceAwareModel):
         """
         super().__init__(device=device)
         self._set_fastcoref_logger(use_logger)
+        # tokens are not used in the current implementation
+        self.system_tokens = [context_token]  # type: List[str]
         self.model_name = model_name
         self.enable_progress_bar = enable_progress_bar
         self.model = LingMessCoref(model_name, enable_progress_bar=enable_progress_bar, device=device)
         self.splitter = re.compile(splitter)
+        self._context_token = context_token
+        self._context = ""
 
     def __call__(self, text: str) -> List[SentenceProposal]:
         """
-        Perform coreference resolution on the input text.
-        This method tokenizes the text, resolves coreferences,
-        and returns a list of `SentenceProposal` objects.
+        Perform coreference resolution on the given text.
+        This method takes a text input, processes it using the LingMessCoref model,
+        and returns a list of resolved sentences as `SentenceProposal` objects.
+        The method first tokenizes the text, then applies coreference resolution,
+        and finally replaces coreferences with their canonical mentions.
+        
         Args:
             text (str): The input text to resolve coreferences in.
-        Returns:
-            List[SentenceProposal]: A list of `SentenceProposal` objects representing the resolved sentences.
         """
-        result = self.model.predict(text)
+        raw_text = text
+        prefix = f"{self._context}\n\n{self._context_token} "
+        full_text = prefix + raw_text
+
+        result = self.model.predict(full_text)
 
         clusters = result.get_clusters()
         clusters_spans = result.get_clusters(as_strings=False)
 
-        antecedents = [mention for cluster in clusters for mention in cluster if " " in mention]
-        tokens_grouped_by_sentences = self._tokenize_text_by_sentences(text, antecedents)
+        adjusted_clusters: List[List[str]] = []
+        adjusted_spans: List[List[tuple]] = []
+        offset = len(prefix)
+        for mentions, spans in zip(clusters, clusters_spans):
+            new_spans = [
+                (start - offset, end - offset)
+                for (start, end) in spans
+                if start >= offset
+            ]
+            if new_spans:
+                adjusted_clusters.append(mentions)
+                adjusted_spans.append(new_spans)
+
+        antecedents = [
+            mention
+            for cluster in adjusted_clusters
+            for mention in cluster
+            if " " in mention
+        ]
+        antecedents.extend(self.system_tokens)
+
+        tokens_grouped_by_sentences = self._tokenize_text_by_sentences(raw_text, antecedents)
 
         tokens_with_replacements = self._replace_coreference_by_spans(
-            tokens_grouped_by_sentences, clusters, clusters_spans
+            tokens_grouped_by_sentences,
+            adjusted_clusters,
+            adjusted_spans
         )
 
-        sentence_proposals = []
-        for sentence_index, sentence_tokens in enumerate(tokens_with_replacements):
-            sentence_proposal = SentenceProposal(
-                tokens=sentence_tokens,
-                index=sentence_index
-            )
-            sentence_proposals.append(sentence_proposal)
+        return [
+            SentenceProposal(tokens=sent_tokens, index=i)
+            for i, sent_tokens in enumerate(tokens_with_replacements)
+        ]
 
-        return sentence_proposals
+    def set_context(self, context: str) -> None:
+        """
+        Set the context for coreference resolution.
+        This context is used to provide additional information
+        for resolving coreferences in the input text.
+
+        Args:
+            context (str): The context to set.
+
+        """
+        self._context = context
+
+    def set_context_token(self, context_token: str) -> None:
+        """
+        Set the context token for coreference resolution.
+        This token is used to indicate the start of the context in the input text.
+
+        Args:
+            context_token (str): The context token to set.
+
+        """
+        self._context_token = context_token
 
     def to(self, device: DeviceType) -> "CorefResolver":
         """

@@ -174,3 +174,7 @@ cython_debug/
 .pypirc
 *.DS_Store
 .poetry/
+
+data
+*.pkl
+*.index
