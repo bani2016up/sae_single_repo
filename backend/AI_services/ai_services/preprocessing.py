@@ -11,7 +11,8 @@ from .models.coref import CorefResolver
 
 __all__ = (
     "Pipeline",
-    "get_default_paragraph_processing_pipeline"
+    "get_default_paragraph_processing_pipeline",
+    "get_default_coref_pipeline",
 )
 
 T = TypeVar("T")
