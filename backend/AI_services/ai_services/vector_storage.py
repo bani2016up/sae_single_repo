@@ -6,12 +6,12 @@ as well as saving and loading the index to/from disk.
 It also allows for the storage of associated metadata.
 """
 import faiss
+import torch
 import numpy as np
 import pickle
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Callable, Union
 from tqdm.auto import tqdm
-from sentence_transformers import SentenceTransformer
 
 from .interfaces import VectorStorageInterface
 from .typing import DocumentMetadataType
@@ -38,7 +38,7 @@ class VectorStorage(VectorStorageInterface):
         self,
         dim: int,
         index_factory: str = "IVF100,Flat",
-        embedder: SentenceTransformer = None
+        embedder: Callable[..., Union[torch.Tensor, np.ndarray]] = None
     ):
         """
         Initialize the VectorStorage with the specified parameters.
