@@ -1,7 +1,7 @@
 import torch
 
 from tqdm.auto import tqdm
-from typing import List, Iterable, Union
+from typing import List, Callable, Union
 from transformers import RobertaForSequenceClassification, RobertaTokenizer
 
 from .explanation import ExplanationLLM
@@ -117,10 +117,11 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         tokenizer_kwargs: dict = None,
         model_kwargs: dict = None,
         use_tqdm: bool = False,
-        paragraph_processing_device: DeviceType = None,
+        processing_device: DeviceType = None,
         llm_device: DeviceType = None,
         context_token: str = "</CONTEXT>",
-        get_explanation: bool = True
+        get_explanation: bool = True,
+        automatic_contextualisation: bool = False
     ):
         """
         Initializes the FactCheckerPipeline with a pre-trained model and tokenizer.
@@ -130,7 +131,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
             model_name (str): The name of the pre-trained model.
             processing_pipeline (Pipeline): The pipeline for processing paragraphs.
             device (str): The device to use for computation ("cuda" or "cpu").
-            paragraph_processing_device (str): Device for paragraph processing ("cuda" or "cpu").
+            processing_device (str): Device for paragraph processing ("cuda" or "cpu").
             llm_device (str): Device for the language model ("cuda" or "cpu").
             tokenizer_kwargs (dict): Additional arguments for the tokenizer.
             model_kwargs (dict): Additional arguments for the model.
@@ -143,6 +144,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
             temperature (float): Sampling temperature for the explanation generation.
             context_token (str): Token to separate context from the sentence.
             get_explanation (bool): Whether to generate an explanation.
+            automatic_contextualisation (bool): Whether to automatically contextualize the claim.
         """
         super().__init__(
             model_name=model_name,
@@ -151,8 +153,24 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
             model_kwargs=model_kwargs,
             use_tqdm=use_tqdm
         )
-        if paragraph_processing_device is None:
-            paragraph_processing_device = device
+        self.context_setter: Union[Callable[..., None], None] = None
+
+        if automatic_contextualisation:
+            pipeline_coref_system_tokens = getattr(
+                processing_pipeline, "system_tokens", None
+            )  # type: Union[list[str], None]
+
+            if pipeline_coref_system_tokens is not None:
+                if context_token not in pipeline_coref_system_tokens:
+                    pipeline_coref_system_tokens.append(context_token)
+
+            self.context_setter = getattr(processing_pipeline, "set_context", None)
+
+            if hasattr(processing_pipeline, "set_context_token"):
+                getattr(processing_pipeline, "set_context_token")(context_token)
+
+        if processing_device is None:
+            processing_device = device
 
         if llm_device is None:
             llm_device = device
@@ -160,7 +178,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         if get_explanation:
             self.llm = (llm or ExplanationLLM()).to(llm_device)
         else:
-            def dummy_llm(*_, **_kwargs):
+            def dummy_llm(*_, **_kwargs) -> str:
                 # PEP 8 — Naming Styles:
                 # _single_leading_underscore: weak “internal use” indicator.
                 # E.g. from M import * does not import objects whose names start with an underscore.
@@ -169,9 +187,9 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
 
             self.llm = dummy_llm
 
-        self.paragraph_processing_pipeline = (
+        self.processing_pipeline = (
                 processing_pipeline or get_default_paragraph_processing_pipeline()
-        ).to(paragraph_processing_device)
+        ).to(processing_device)
 
         self.vector_storage = vector_storage
         self.storage_search_k = storage_search_k
@@ -189,9 +207,11 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
             threshold=self.storage_search_threshold
         )
         historical_data = self._metadata2text(metadata)
-        if len(historical_data) == 0:
+
+        if len(historical_data) < 10:
             return []
-        result = super().__call__(str(claim), str(historical_data))
+
+        result = super().__call__(str(claim), historical_data)
 
         if torch.argmax(result[0], dim=1).item() == 0:
             return []
@@ -223,10 +243,10 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         Returns:
             List[SuggestionResponse]: A list of SuggestionResponse instances for the evaluated sentence.
         """
-        # FIXME: coref context tokens
-        # sentence_with_context = f"{context}\n\n{self.context_token} {sentence}"
-        sentence_with_context = self.paragraph_processing_pipeline(sentence)[0]
-        # sentence_with_context = sentence_with_context.split(self.context_token)
+        if self.context_setter is not None:
+            self.context_setter(context)
+
+        sentence_with_context = self.processing_pipeline(sentence)[0]
 
         if len(sentence_with_context) == 0:
             return []
@@ -239,8 +259,6 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         return result
 
     def evaluate_text(self, text: str, *, context: str = "") -> List[SuggestionResponse]:
-        # TODO: fix context tokens
-        # TODO: check works
         """
         Evaluate a given text and return a list of suggestion responses.
 
@@ -250,18 +268,14 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         Returns:
             List[SuggestionResponse]: A list of SuggestionResponse instances for the evaluated text.
         """
-        sentences_with_context = f"{context}\n\n{self.context_token} {text}"
-        sentences = self.paragraph_processing_pipeline(sentences_with_context)  # type: list[str]
+        if self.context_setter is not None:
+            self.context_setter(context)
 
-        for i in range(len(sentences)):
-            if sentences[i].startswith(self.context_token):
-                sentences = sentences[i:]
-                break
+        sentences = self.processing_pipeline(text)  # type: list[str]
 
         if len(sentences) == 0:
             return []
 
-        sentences[0] = sentences[0].removeprefix(self.context_token + " ")
         results = []
         for sentence in tqdm(sentences, desc="Evaluating sentences", disable=not self.use_tqdm):
             if len(sentence) == 0:
