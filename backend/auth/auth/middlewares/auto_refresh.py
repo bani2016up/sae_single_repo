@@ -1,10 +1,12 @@
+import logging
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from ..services.services import set_auth_cookies
-from supabase import create_client, Client
+from supabase import Client, create_client
+
 from ..config.cfg import SUPABASE_KEY, SUPABASE_URL
-import logging
+from ..services.services import set_auth_cookies
 
 # logging stays here, because I love it AND DON'T U DARE TAKE IT AWAY FROM ME!!!!
 logging.basicConfig(level=logging.INFO)
@@ -38,7 +40,7 @@ class AutoRefreshTokenMiddleware(BaseHTTPMiddleware):
                 logger.error(f"Failed to refresh token: {str(e)}")
                 return JSONResponse(
                     status_code=401,
-                    content={"detail": f"Failed to refresh token: {str(e)}"},
+                    content={"detail": f"Failed to refresh token"},
                 )
         if access_token and not refresh_token:
             logger.info("No refresh token found, access token found. How the fu-")

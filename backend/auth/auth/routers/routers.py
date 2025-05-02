@@ -1,17 +1,18 @@
 from fastapi import APIRouter, Depends, Request, status
-from fastapi.security import HTTPBearer
-from ..services.services import (
-    verify_token,
-    login,
-    register,
-    logout,
-    give_account_info,
-    delete_all_cookies,
-)
-from ..models.users import UserLogin, UserRegister
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBearer
+
 from ..config.cfg import DEV_MODE
 from ..models.token import TokenPayload
+from ..models.users import UserLogin, UserRegister
+from ..services.services import (
+    delete_all_cookies,
+    give_account_info,
+    login,
+    logout,
+    register,
+    verify_token,
+)
 
 auth_router = APIRouter()
 security = HTTPBearer()
@@ -36,7 +37,9 @@ async def sign_out(payload: TokenPayload = Depends(verify_token)):
 async def get_current_user(payload: TokenPayload = Depends(verify_token)):
     return give_account_info(payload)
 
+
 if DEV_MODE:
+
     @auth_router.get("/delete_all_cookies")
     async def delete_all_cookies():
         return await delete_all_cookies()

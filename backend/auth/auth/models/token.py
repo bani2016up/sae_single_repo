@@ -1,6 +1,7 @@
-from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional
 from uuid import UUID
+
+from pydantic import BaseModel, EmailStr, Field
 
 class AmrEntry(BaseModel):
     method: str

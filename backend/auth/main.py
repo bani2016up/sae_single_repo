@@ -1,8 +1,10 @@
 import uvicorn
-from fastapi import FastAPI, APIRouter
-from auth.routers.routers import auth_router as AuthRouter
+
+from fastapi import APIRouter, FastAPI
+
+from auth.config.cfg import HOST, PORT
 from auth.middlewares.auto_refresh import AutoRefreshTokenMiddleware
-from auth.config.cfg import HOST,PORT
+from auth.routers.routers import auth_router as AuthRouter
 
 app = FastAPI()
 

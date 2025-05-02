@@ -1,11 +1,24 @@
-from supabase import create_client, Client
-from ..models.users import UserLogin, UserRegister
+import logging
+from datetime import datetime, timedelta, timezone
+
 from fastapi import Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
-from jose import jwt, JWTError, ExpiredSignatureError
-from ..config.cfg import SUPABASE_KEY,SUPABASE_URL,JWT_SECRET,JWT_ALGORITHM, ACCESS_TOKEN_MAX_AGE,REFRESH_TOKEN_MAX_AGE
-from datetime import datetime, timedelta, timezone
+from jose import JWTError, ExpiredSignatureError, jwt
+from supabase import Client, create_client
+
+from ..config.cfg import (
+    ACCESS_TOKEN_MAX_AGE,
+    JWT_ALGORITHM,
+    JWT_SECRET,
+    REFRESH_TOKEN_MAX_AGE,
+    SUPABASE_KEY,
+    SUPABASE_URL,
+)
 from ..models.token import TokenPayload
+from ..models.users import UserLogin, UserRegister
+
+logging.basicConfig(level=logging.ERROR)
+logger = logging.getLogger(__name__)
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -21,7 +34,8 @@ async def verify_token(request: Request) -> TokenPayload:
         )
         return TokenPayload(**payload)
     except JWTError as e:
-        raise HTTPException(status_code=401, detail=f"Invalid token - Error: {e}")
+        logger.error(e)
+        raise HTTPException(status_code=401, detail=f"Invalid token")
 
 
 async def register(user: UserRegister):
@@ -31,7 +45,8 @@ async def register(user: UserRegister):
         )
         return {"message": "User created", "user_id": response.user.id}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(e)
+        raise HTTPException(status_code=400, detail="Registration failed")
     # Users should login by themselves after registration, because I hate them.
 
 
@@ -49,7 +64,8 @@ async def login(user: UserLogin) -> JSONResponse:
         set_auth_cookies(response, res.session.access_token, res.session.refresh_token)
         return response
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Login failed - Error: {e}")
+        logger.error(e)
+        raise HTTPException(status_code=401, detail=f"Login failed")
 
 
 async def logout(payload: TokenPayload) -> JSONResponse:
@@ -60,7 +76,8 @@ async def logout(payload: TokenPayload) -> JSONResponse:
         response.delete_cookie("refresh_token")
         return response
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(e)
+        raise HTTPException(status_code=400, detail="Logout failed")
 
 
 def give_account_info(payload: TokenPayload) -> TokenPayload:
@@ -74,8 +91,8 @@ async def delete_all_cookies() -> JSONResponse:
         response.delete_cookie("refresh_token")
         return response
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
+        logger.error(e)
+        raise HTTPException(status_code=400, detail="Cookies cannot be deleted")
 
 
 def set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: str):
@@ -86,7 +103,7 @@ def set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: s
         samesite="Lax",
         secure=True,
         max_age=ACCESS_TOKEN_MAX_AGE,
-        expires=datetime.now(timezone.utc) + timedelta(seconds=ACCESS_TOKEN_MAX_AGE)
+        expires=datetime.now(timezone.utc) + timedelta(seconds=ACCESS_TOKEN_MAX_AGE),
     )
     response.set_cookie(
         key="refresh_token",
@@ -95,6 +112,6 @@ def set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: s
         samesite="Strict",
         secure=True,
         max_age=REFRESH_TOKEN_MAX_AGE,
-        expires=datetime.now(timezone.utc) + timedelta(seconds=REFRESH_TOKEN_MAX_AGE)
+        expires=datetime.now(timezone.utc) + timedelta(seconds=REFRESH_TOKEN_MAX_AGE),
     )
     return response

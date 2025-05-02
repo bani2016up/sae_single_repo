@@ -1,6 +1,7 @@
-from dotenv import load_dotenv
 from os import getenv
-from typing import Final, TypeVar, Any, Optional
+from typing import Any, Final, Optional, TypeVar
+
+from dotenv import load_dotenv
 
 
 load_dotenv()
