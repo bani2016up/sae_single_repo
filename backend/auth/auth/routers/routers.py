@@ -11,29 +11,29 @@ from ..services.services import (
 from ..models.users import UserLogin, UserRegister
 from fastapi.responses import JSONResponse
 from ..config.cfg import DEV_MODE
-
+from ..models.token import TokenPayload
 
 auth_router = APIRouter()
 security = HTTPBearer()
 
 
-@auth_router.post("/sign_up")
+@auth_router.post("/users")
 async def sign_up(user: UserRegister):
     return await register(user)
 
 
-@auth_router.post("/sign_in")
+@auth_router.post("/sessions")
 async def sign_in(user: UserLogin):
     return await login(user)
 
 
-@auth_router.delete("/sign_out")
-async def sign_out(payload: dict = Depends(verify_token)):
+@auth_router.delete("/sessions/")
+async def sign_out(payload: TokenPayload = Depends(verify_token)):
     return await logout(payload)
 
 
-@auth_router.get("/account_check")
-async def check_account(payload: dict = Depends(verify_token)):
+@auth_router.get("/users/me")
+async def get_current_user(payload: TokenPayload = Depends(verify_token)):
     return give_account_info(payload)
 
 if DEV_MODE:

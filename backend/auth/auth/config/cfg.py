@@ -19,3 +19,6 @@ PORT: Final[int] = int(get_env("PORT"))
 HOST: Final[str] = get_env("HOST")
 
 DEV_MODE: Final[bool] = getenv("DEV_MODE") or False
+
+ACCESS_TOKEN_MAX_AGE = 60 * 60  # 1 hour in seconds [SUPABASE CONST]
+REFRESH_TOKEN_MAX_AGE = 30 * 24 * 60 * 60  # 30 days in seconds [SUPABASE CONST]

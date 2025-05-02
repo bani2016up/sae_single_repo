@@ -11,9 +11,9 @@ router = APIRouter()
 
 api_version = "/v1"
 
-routes = APIRouter(prefix="/auth_api", redirect_slashes=False)
+routes = APIRouter(prefix="/api", redirect_slashes=False)
 
-routes.include_router(AuthRouter, prefix=f"{api_version}/auth", tags=["users"])
+routes.include_router(AuthRouter, prefix=f"{api_version}/auth", tags=["auth"])
 
 app.add_middleware(AutoRefreshTokenMiddleware)
 app.include_router(routes)
