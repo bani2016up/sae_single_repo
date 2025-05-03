@@ -1,5 +1,5 @@
 from typing import NoReturn, Optional
-from database.database.database import AsyncSession
+from database.database.db import AsyncSession
 from fastapi.exceptions import HTTPException
 
 

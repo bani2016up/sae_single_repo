@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "database"
-version = "0.1.9"
+version = "0.1.10"
 description = ""
 authors = ["bani2016up <bani2016up@gmail.com>"]
 readme = "README.md"
