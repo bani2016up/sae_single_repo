@@ -24,7 +24,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
 async def verify_token(request: Request) -> TokenPayload:
-    auth_cookies = request.cookies.get("access_token")
+    access_token = request.cookies.get("access_token")
     if not auth_cookies:
         raise HTTPException(status_code=401, detail="Not authenticated")
     try:
