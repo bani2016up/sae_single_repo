@@ -5,6 +5,7 @@
 
 import logging
 import re
+import spacy
 
 from typing import List
 from fastcoref import LingMessCoref
@@ -40,7 +41,6 @@ class CorefResolver(DeviceAwareModel):
         enable_progress_bar: bool = False,
         device: DeviceType = "cpu",
         use_logger: bool = False,
-        splitter: str = r"(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=[.?])\s",
         context_token: str = "</CONTEXT>",
     ):
         """
@@ -51,6 +51,7 @@ class CorefResolver(DeviceAwareModel):
             enable_progress_bar (bool): Whether to show the progress bar during inference.
             device (DeviceType): Device to load the model on ("cpu" or "cuda").
             use_logger (bool): Whether to enable the fastcoref logger.
+            context_token (str): Token indicating context in text.
         """
         super().__init__(device=device)
         self._set_fastcoref_logger(use_logger)
@@ -58,8 +59,13 @@ class CorefResolver(DeviceAwareModel):
         self.system_tokens: List[str] = [context_token]
         self.model_name: str = model_name
         self.enable_progress_bar: bool = enable_progress_bar
-        self.model: LingMessCoref = LingMessCoref(model_name, enable_progress_bar=enable_progress_bar, device=device)
-        self.splitter: re.Pattern = re.compile(splitter)
+        self.model: LingMessCoref = LingMessCoref(
+            model_name,
+            enable_progress_bar=enable_progress_bar,
+            device=device
+        )
+        self.nlp = spacy.load("en_core_web_sm", disable=["ner", "parser"])
+        self.nlp.add_pipe("sentencizer")
         self._context_token: str = context_token
         self._context: str = ""
 
@@ -183,32 +189,15 @@ class CorefResolver(DeviceAwareModel):
         text: str,
         antecedents: List[str]
     ) -> List[List[Token]]:
-        tokens_grouped_by_sentences = []  # type: List[List[Token]]
-        last_split_position = 0
-
-        for match in self.splitter.finditer(text):
-            sentence_end_position = match.start() + 1
-            sentence_text = text[last_split_position:sentence_end_position]
-
-            tokens_in_sentence = self._tokenize_text_with_antecedents(sentence_text, antecedents)
-
+        tokens_grouped_by_sentences: List[List[Token]] = []
+        doc = self.nlp(text)
+        for sent in doc.sents:
+            sent_text = sent.text
+            tokens_in_sentence = self._tokenize_text_with_antecedents(sent_text, antecedents)
             for token in tokens_in_sentence:
-                token.start += last_split_position
-                token.end += last_split_position
-
+                token.start += sent.start_char
+                token.end += sent.start_char
             tokens_grouped_by_sentences.append(tokens_in_sentence)
-            last_split_position = match.end()
-
-        if last_split_position < len(text):
-            sentence_text = text[last_split_position:]
-            tokens_in_last_sentence = self._tokenize_text_with_antecedents(sentence_text, antecedents)
-
-            for token in tokens_in_last_sentence:
-                token.start += last_split_position
-                token.end += last_split_position
-
-            tokens_grouped_by_sentences.append(tokens_in_last_sentence)
-
         return tokens_grouped_by_sentences
 
     @staticmethod

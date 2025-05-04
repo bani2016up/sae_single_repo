@@ -1,10 +1,3 @@
-"""
-Vector Storage using FAISS
-This module provides a class for managing vector storage using FAISS.
-It includes methods for adding, searching, and deleting vectors,
-as well as saving and loading the index to/from disk.
-It also allows for the storage of associated metadata.
-"""
 import faiss
 import torch
 import numpy as np
@@ -29,7 +22,6 @@ class VectorStorage(VectorStorageInterface):
     It also allows for the storage of associated metadata.
     Attributes:
         dim (int): The dimension of the vectors.
-        index_factory (str): The index factory string for FAISS.
         embedder (SentenceTransformer): A function to convert text to vectors.
         index (faiss.Index): The FAISS index for vector storage.
     """
@@ -37,32 +29,20 @@ class VectorStorage(VectorStorageInterface):
     def __init__(
         self,
         dim: int,
-        index_factory: str = "IVF100,Flat",
         embedder: Callable[..., Union[torch.Tensor, np.ndarray]] = None
     ):
         """
         Initialize the VectorStorage with the specified parameters.
         Args:
             dim (int): The dimension of the vectors.
-            index_factory (str): The index factory string for FAISS.
             embedder (Callable[[str], np.ndarray]): A function to convert text to vectors.
         """
         self.dim: int = dim
         self.embedder: Callable[..., Union[torch.Tensor, np.ndarray]] = embedder
-        # <class ‘faiss.swigfaiss.IndexIVFFlat’>, but if you explicitly specify the type
-        # the IDE outputs a lot of warnings
-        self.index = faiss.index_factory(self.dim, index_factory)
-        self._metadata: Dict[int, DocumentMetadataType] = {}
-
-    def train(self, vectors: np.ndarray) -> None:
-        """
-        Train the FAISS index with the provided vectors.
-
-        Args:
-            vectors (np.ndarray): The vectors to train the index with.
-        """
-        if hasattr(self.index, 'is_trained') and not self.index.is_trained:
-            self.index.train(vectors)
+        self.index = faiss.IndexFlatIP(self.dim)
+        self._metadata: Dict[int, Dict[str, Any]] = {}
+        self._id_to_offset: Dict[int, int] = {}
+        self._offset_to_id: List[int] = []
 
     def add_document(self, index: int, text: str, metadata: DocumentMetadataType) -> None:
         """
@@ -74,13 +54,13 @@ class VectorStorage(VectorStorageInterface):
         Raises:
             ValueError: If the embedder function is not provided.
         """
-        if self.embedder is None:
-            raise ValueError("Embedder function must be provided.")
         vec = self.embedder(text)
+        vec /= np.linalg.norm(vec)
         arr = np.asarray([vec], dtype="float32")
 
-        self.train(arr)
-        self.index.add_with_ids(arr, np.asarray([index], dtype='int64'))
+        self.index.add(arr)
+        self._id_to_offset[index] = len(self._offset_to_id)
+        self._offset_to_id.append(index)
         self._metadata[index] = metadata
 
     def add_documents(
@@ -98,19 +78,19 @@ class VectorStorage(VectorStorageInterface):
         Raises:
             ValueError: If the embedder function is not provided.
         """
-        if self.embedder is None:
-            raise ValueError("Embedder function must be provided.")
-
         vectors = np.asarray(
             [
                 self.embedder(t, show_progress_bar=False) for t in tqdm(texts)
             ], dtype="float32"
         )
-        self.train(vectors)
+        vectors = vectors / np.linalg.norm(vectors, axis=1, keepdims=True)
 
-        np_ids = np.array(ids, dtype="int64")
+        self.index.add(vectors)
 
-        self.index.add_with_ids(vectors, np_ids)
+        for idx in ids:
+            self._id_to_offset[idx] = len(self._offset_to_id)
+            self._offset_to_id.append(idx)
+
         for idx, md in zip(ids, metadata):
             self._metadata[idx] = md
 
@@ -129,22 +109,22 @@ class VectorStorage(VectorStorageInterface):
         """
         if self.embedder is None:
             raise ValueError("Embedder function must be provided.")
-        query_vec = np.asarray(
-            [
-                self.embedder(text, show_progress_bar=False)
-            ], dtype="float32"
-        )
+        query_vec = self.embedder(text, show_progress_bar=False)
+        query_vec /= np.linalg.norm(query_vec)  # L2 normalization
+        query_vec = np.asarray([query_vec], dtype="float32")
+
         distances, ids = self.index.search(query_vec, k)
         results: List[Dict[str, Any]] = []
 
-        for dist, idx in zip(distances[0], ids[0]):
-            if idx == -1 or dist > threshold:
+        for dist, pos in zip(distances[0], ids[0]):
+            if pos == -1 or dist > threshold:
                 continue
+            doc_id = self._offset_to_id[pos]
             results.append(
                 {
-                    "id": int(idx),
+                    "id": int(doc_id),
                     "score": float(dist),
-                    "metadata": self._metadata.get(int(idx))
+                    "metadata": self._metadata.get(int(doc_id))
                 }
             )
         return results

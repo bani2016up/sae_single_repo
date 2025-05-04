@@ -1,5 +1,6 @@
 from copy import deepcopy
 from typing import Callable, List, Dict, TypeAlias, Union
+from datasets.utils.logging import disable_progress_bar
 
 from .interfaces import PromptInterface
 from .static import FACT_CHECKER_PROMPT
@@ -8,6 +9,7 @@ from .typing import PromptType
 __all__ = (
     "PromptGeneratorType",
     "FactCheckerPrompt",
+    "disable_fastcoref_progress_bar"
 )
 
 # can't be placed in typing.py because of circular import (.interfaces -> .typing -> .interfaces)
@@ -65,3 +67,6 @@ class FactCheckerPrompt(PromptInterface):
         else:
             raise ValueError("The last item in the prompt list must be a dictionary.")
         return prompt
+
+def disable_fastcoref_progress_bar() -> None:
+    disable_progress_bar()
