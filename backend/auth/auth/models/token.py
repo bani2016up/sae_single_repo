@@ -3,19 +3,23 @@ from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
 
+
 class AmrEntry(BaseModel):
     method: str
     timestamp: int
 
+
 class AppMetadata(BaseModel):
     provider: str
     providers: List[str]
+
 
 class UserMetadata(BaseModel):
     email: EmailStr
     email_verified: bool
     phone_verified: bool
     sub: UUID
+
 
 class TokenPayload(BaseModel):
     iss: str
