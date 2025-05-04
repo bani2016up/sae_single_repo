@@ -44,7 +44,7 @@ class VectorStorage(VectorStorageInterface):
         self._id_to_offset: Dict[int, int] = {}
         self._offset_to_id: List[int] = []
 
-    def add_document(self, index: int, text: str, metadata: Dict[str, Any]) -> None:
+    def add_document(self, index: int, text: str, metadata: DocumentMetadataType) -> None:
         """
         Add a single document to the vector storage.
         Args:
@@ -67,7 +67,7 @@ class VectorStorage(VectorStorageInterface):
         self,
         ids: List[int],
         texts: List[str],
-        metadata: List[Dict[str, Any]]
+        metadata: List[DocumentMetadataType]
     ) -> None:
         """
         Add multiple documents to the vector storage.
@@ -94,7 +94,7 @@ class VectorStorage(VectorStorageInterface):
         for idx, md in zip(ids, metadata):
             self._metadata[idx] = md
 
-    def search(self, text: str, *, k: int = 5, threshold: float = 1.0) -> List[Dict[str, Any]]:
+    def search(self, text: str, *, k: int = 5, threshold: float = 1.0) -> List[DocumentMetadataType]:
         """
         Search for the nearest neighbors of the given text in the vector storage.
         Args:
