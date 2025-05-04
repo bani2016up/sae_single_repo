@@ -18,8 +18,8 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 class AutoRefreshTokenMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
-        access_token = request.cookies.get("access_token")
-        refresh_token = request.cookies.get("refresh_token")
+        access_token = request.cookies.get(ACCESS_TOKEN)
+        refresh_token = request.cookies.get(REFRESH_TOKEN)
 
         if not access_token and not refresh_token:
             logger.info(
