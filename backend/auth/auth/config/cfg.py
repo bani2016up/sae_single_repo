@@ -18,7 +18,7 @@ SUPABASE_URL: Final[str]  = get_env("SUPABASE_URL")
 SUPABASE_KEY: Final[str]  = get_env("SUPABASE_KEY")
 JWT_ALGORITHM: Final[str]  = get_env("JWT_ALGORITHM")
 JWT_SECRET: Final[str] = get_env("JWT_SECRET")
-PORT: Final[int] = int(get_env("PORT"))
+PORT: Final[int] = get_env("PORT", int)
 HOST: Final[str] = get_env("HOST")
 
 DEV_MODE: Final[bool] = getenv("DEV_MODE") or False
