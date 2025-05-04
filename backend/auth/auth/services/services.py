@@ -27,7 +27,6 @@ async def verify_token(request: Request) -> TokenPayload:
     auth_cookies = request.cookies.get("access_token")
     if not auth_cookies:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    token = auth_cookies
     try:
         payload = jwt.decode(
             access_token, JWT_SECRET, algorithms=[JWT_ALGORITHM], audience="authenticated"
