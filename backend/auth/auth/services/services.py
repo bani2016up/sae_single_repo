@@ -30,7 +30,7 @@ async def verify_token(request: Request) -> TokenPayload:
     token = auth_cookies
     try:
         payload = jwt.decode(
-            token, JWT_SECRET, algorithms=[JWT_ALGORITHM], audience="authenticated"
+            access_token, JWT_SECRET, algorithms=[JWT_ALGORITHM], audience="authenticated"
         )
         return TokenPayload(**payload)
     except JWTError as e:
