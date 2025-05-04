@@ -24,13 +24,12 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
 async def verify_token(request: Request) -> TokenPayload:
-    auth_cookies = request.cookies.get("access_token")
-    if not auth_cookies:
+    access_token = request.cookies.get("access_token")
+    if not access_token:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    token = auth_cookies
     try:
         payload = jwt.decode(
-            token, JWT_SECRET, algorithms=[JWT_ALGORITHM], audience="authenticated"
+            access_token, JWT_SECRET, algorithms=[JWT_ALGORITHM], audience="authenticated"
         )
         return TokenPayload(**payload)
     except JWTError as e:
