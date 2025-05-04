@@ -6,11 +6,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def get_env(env_var: str) -> Any:
-    x: Optional[Any] = getenv(env_var)
-    if x is not None:
-        return x
-    raise ValueError(f"{env_var} is not set in the .env file")
+T = TypeVar('T')
+
+
+def get_env(env_variable: str, strict_type: Callable[[str], T] = lambda x: x) -> T:
+    if env_value := getenv(env_variable):
+        return strict_type(env_value)
+    raise ValueError(f"{env_variable} does not exist or its value is not set in the .env file")
 
 SUPABASE_URL: Final[str]  = get_env("SUPABASE_URL")
 SUPABASE_KEY: Final[str]  = get_env("SUPABASE_KEY")
