@@ -1,5 +1,5 @@
 from os import getenv
-from typing import Any, Final, Optional, TypeVar
+from typing import Any, Final, Optional, TypeVar, Callable
 
 from dotenv import load_dotenv
 
