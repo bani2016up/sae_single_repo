@@ -7,7 +7,6 @@ from ..models.token import TokenPayload
 from ..models.users import UserLogin, UserRegister
 from ..services.services import (
     delete_all_cookies,
-    give_account_info,
     login,
     logout,
     register,
@@ -35,7 +34,7 @@ async def sign_out(payload: TokenPayload = Depends(verify_token)):
 
 @auth_router.get("/users/me")
 async def get_current_user(payload: TokenPayload = Depends(verify_token)):
-    return give_account_info(payload)
+    return payload
 
 
 if DEV_MODE:
