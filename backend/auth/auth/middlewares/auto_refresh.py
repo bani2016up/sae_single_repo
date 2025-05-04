@@ -23,7 +23,7 @@ class AutoRefreshTokenMiddleware(BaseHTTPMiddleware):
 
         if not access_token and not refresh_token:
             logger.info(
-                "No access and refresh token found, proceeding without authentication"
+                "No access or refresh token found, proceeding without authentication"
             )
             return await call_next(request)
         if not access_token and refresh_token:
