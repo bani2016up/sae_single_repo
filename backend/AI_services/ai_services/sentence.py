@@ -13,11 +13,18 @@ class Token(object):
     def __init__(self, text: str, start: int, end: int):
         """
         Initialize a Token instance.
+        
         Args:
             text (str): The text of the token.
             start (int): The starting position of the token in the original text.
             end (int): The ending position of the token in the original text.
+
+        Raises:
+            ValueError: If the end position is less than the start position.
         """
+        if end < start:
+            raise ValueError("End position must be greater than or equal to start position.")
+
         self.text = text
         self.start = start
         self.end = end
