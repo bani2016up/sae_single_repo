@@ -246,7 +246,7 @@ def get_default_coref_pipeline(*, device: DeviceType = "cuda") -> Pipeline:
     """
     return Pipeline[str, List[SentenceProposal]](
         steps=[
-            ("coref", CorefResolver()),
+            ("coref", CorefResolver(device=device)),
         ],
         device=device
     )
