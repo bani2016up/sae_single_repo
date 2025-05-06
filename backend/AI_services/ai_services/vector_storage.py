@@ -156,7 +156,13 @@ class VectorStorage(VectorStorageInterface):
         """
         faiss.write_index(self.index, f"{filepath}.index")
         with open(f"{filepath}.pkl", "wb") as file:
-            pickle.dump(self._metadata, file)
+            pickle.dump(
+                {
+                    "metadata": self._metadata,
+                    "id_to_offset": self._id_to_offset,
+                    "offset_to_id": self._offset_to_id
+                }, file
+            )
 
     def load(self, filepath: str) -> None:
         """
@@ -166,4 +172,7 @@ class VectorStorage(VectorStorageInterface):
         """
         self.index = faiss.read_index(f"{filepath}.index")
         with open(f"{filepath}.pkl", "rb") as file:
-            self._metadata = pickle.load(file)
+            data = pickle.load(file)
+            self._metadata = data["metadata"]
+            self._id_to_offset = data["id_to_offset"]
+            self._offset_to_id = data["offset_to_id"]

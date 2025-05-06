@@ -5,7 +5,8 @@ from sklearn.metrics import classification_report
 
 def paragraph_classification_report(
     true_suggestions: list[list[str]],
-    pred_suggestions: list[list[str]]
+    pred_suggestions: list[list[str]],
+    output_dict: bool = False
 ) -> str:
     y_true = [1 if len(tr) > 0 else 0 for tr in true_suggestions]
     y_pred = [1 if len(pr) > 0 else 0 for pr in pred_suggestions]
@@ -13,7 +14,8 @@ def paragraph_classification_report(
         y_true, y_pred,
         target_names=["no_error", "error"],
         digits=3,
-        zero_division=0.0
+        zero_division=0.0,
+        output_dict=output_dict
     )
 
 
@@ -21,7 +23,8 @@ def sentence_classification_report(
     texts: list[str],
     true_suggestions: list[list[str]],
     pred_suggestions: list[list[str]],
-    nlp
+    nlp,
+    output_dict: bool = False
 ) -> str:
     y_true, y_pred = [], []
     for text, trues, preds in zip(texts, true_suggestions, pred_suggestions):
@@ -36,7 +39,8 @@ def sentence_classification_report(
         y_true, y_pred,
         target_names=["no_error", "error"],
         digits=3,
-        zero_division=0.0
+        zero_division=0.0,
+        output_dict=output_dict
     )
 
 

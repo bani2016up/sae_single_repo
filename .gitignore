@@ -178,3 +178,5 @@ cython_debug/
 data
 *.pkl
 *.index
+notebooks/setup_clearml_env.py
+backend.zip
