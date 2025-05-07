@@ -3,6 +3,7 @@ import torch
 from tqdm.auto import tqdm
 from typing import List, Callable, Union
 from transformers import RobertaForSequenceClassification, RobertaTokenizer
+from sentence_transformers import CrossEncoder
 
 from .explanation import ExplanationLLM
 from ..interfaces import (
@@ -84,7 +85,8 @@ class FactCheckingModel(DeviceAwareModel):
             return_tensors="pt",
             truncation=True,
             padding=True,
-            max_length=512 # TODO: use config from __init__
+            max_length=512,  # TODO: use config from __init__
+            verbose=False
         ).to(self.device)
 
         with torch.no_grad():
@@ -109,6 +111,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         llm: LLMInterface = None,
         *,
         storage_search_threshold: float = 1.0,
+        cross_encoder_threshold: float = 0.45,
         storage_search_k: int = 5,
         max_new_tokens: int = 256,
         do_sample: bool = False,
@@ -191,6 +194,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
                 processing_pipeline or get_default_paragraph_processing_pipeline()
         ).to(processing_device)
 
+        self.cross_encoder = CrossEncoder('cross-encoder/stsb-roberta-base', device=device)
         self.vector_storage = vector_storage
         self.storage_search_k = storage_search_k
         self.storage_search_threshold = storage_search_threshold
@@ -198,15 +202,29 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         self.do_sample = do_sample
         self.temperature = temperature
         self.context_token = context_token
+        self.cross_encoder_threshold = cross_encoder_threshold
+
+    @staticmethod
+    def _process_text(text):
+        return "".join([char for char in text.lower() if char.isalnum() or char.isspace()]).strip()
 
     def _predict(self, claim: str, *, is_original: bool = False) -> List[SuggestionResponse]:
         # TODO: fact checking with NER
+        processed_text = self._process_text(str(claim))
         metadata = self.vector_storage.search(
-            str(claim),
+            processed_text,
             k=self.storage_search_k,
             threshold=self.storage_search_threshold
         )
-        historical_data = self._metadata2text(metadata)
+        correct_metadata = []
+        for item in metadata:
+            label_scores = self.cross_encoder.predict(
+                [(processed_text, item['metadata']['text'])],
+                show_progress_bar=False, batch_size=1
+            )[0]
+            if label_scores >= self.cross_encoder_threshold:
+                correct_metadata.append(item)
+        historical_data = self._metadata2text(correct_metadata)
 
         if len(historical_data) < 10:
             return []
@@ -305,7 +323,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
     ) -> SuggestionResponse:
         if isinstance(claim, SentenceProposal):
             return SuggestionResponse(
-                fact=str(claim),
+                fact=claim,
                 is_correct=is_correct,
                 position=SuggestionPosition(
                     start_char_index=claim.tokens[0].start,
