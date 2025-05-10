@@ -194,7 +194,8 @@ class VectorStorageInterface(ABC):
         text: str,
         *,
         k: int = 5,
-        threshold: float = 1.0
+        threshold: float = 1.0,
+        ner: List[str] = None
     ) -> List[DocumentMetadataType]:
         """
         Perform a semantic similarity search for the given query.
@@ -203,7 +204,7 @@ class VectorStorageInterface(ABC):
             text (str): The query text to search for.
             k (int, optional): The number of nearest neighbors to return.
             threshold (float, optional): The minimum similarity score for results.
-
+            ner (list[str], optional): Named entities to filter results.
         Returns:
             List[Dict[str, Any]]: A list of search results, each containing
         """
