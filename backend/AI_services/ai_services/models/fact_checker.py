@@ -1,8 +1,7 @@
-import torch
+import spacy
 
 from tqdm.auto import tqdm
-from typing import List, Callable, Union
-from transformers import RobertaForSequenceClassification, RobertaTokenizer
+from typing import List, Callable, Self, Union
 from sentence_transformers import CrossEncoder
 
 from .explanation import ExplanationLLM
@@ -24,75 +23,24 @@ __all__ = (
 
 
 class FactCheckingModel(DeviceAwareModel):
-    def __init__(
-        self,
-        model_name: str = "Dzeniks/roberta-fact-check",
-        *,
-        device: DeviceType = "cuda",
-        tokenizer_kwargs: dict = None,
-        model_kwargs: dict = None,
-        use_tqdm: bool = False
-    ):
-        """
-        Initializes the FactCheckingModel with a pre-trained model and tokenizer.
-        Args:
-            model_name (str): The name of the pre-trained model.
-            device (str): The device to use for computation ("cuda" or "cpu").
-            tokenizer_kwargs (dict): Additional arguments for the tokenizer.
-            model_kwargs (dict): Additional arguments for the model.
-            use_tqdm (bool): Whether to use tqdm for progress bars.
-        """
+    def __init__(self, model_name="cross-encoder/nli-deberta-v3-base", *, device: DeviceType = "cuda"):
         super().__init__(device=device)
-        self.use_tqdm: bool = use_tqdm
-        self.tokenizer: RobertaTokenizer = RobertaTokenizer.from_pretrained(
-            model_name, **(tokenizer_kwargs or {})
-        )
-        self.model: RobertaForSequenceClassification = RobertaForSequenceClassification.from_pretrained(
-            model_name, **(model_kwargs or {})
-        )
-        self.model.eval()
-        self.model.to(device)
+        self.model = CrossEncoder(model_name, device=device)
 
-    def to(self, device: DeviceType) -> "FactCheckingModel":
-        """
-        Moves the model and tokenizer to the specified device.
-        Args:
-            device (str): The device to move the model and tokenizer to ("cuda" or "cpu").
-        Returns:
-            FactCheckingModel: The updated model instance.
-        """
-        self._device = device
+    def __call__(self, claim: str, evidence: str) -> int:
+        score = self.model.predict(
+            [(claim, evidence)],
+            convert_to_numpy=True,
+            show_progress_bar=False,
+            apply_softmax=True
+        )[0]
+        label_idx = int(score.argmax()) if hasattr(score, 'argmax') else int(score)
+        # print(self.model.model.config.id2label[label_idx], score)
+        return label_idx
+
+    def to(self, device: DeviceType) -> Self:
         self.model.to(device)
         return self
-
-    def __call__(
-        self,
-        claim: str,
-        evidence: str
-    ) -> torch.Tensor:
-        """
-        Evaluates a claim against evidence using the pre-trained model.
-
-        Args:
-            claim (str): The claim to be evaluated.
-            evidence (str): The evidence to support or refute the claim.
-        Returns:
-            torch.Tensor: The model's output logits.
-        """
-        inputs = self.tokenizer.encode_plus(
-            claim,
-            evidence,
-            return_tensors="pt",
-            truncation=True,
-            padding=True,
-            max_length=512,  # TODO: use config from __init__
-            verbose=False
-        ).to(self.device)
-
-        with torch.no_grad():
-            outputs = self.model(**inputs)
-
-        return outputs
 
 
 class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
@@ -106,7 +54,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
     def __init__(
         self,
         vector_storage: VectorStorageInterface,
-        model_name: str = "Dzeniks/roberta-fact-check",
+        model_name: str = "cross-encoder/nli-deberta-v3-base",
         processing_pipeline: Pipeline = None,
         llm: LLMInterface = None,
         *,
@@ -117,14 +65,13 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         do_sample: bool = False,
         temperature: float = 0.1,
         device: DeviceType = "cpu",
-        tokenizer_kwargs: dict = None,
-        model_kwargs: dict = None,
         use_tqdm: bool = False,
         processing_device: DeviceType = None,
         llm_device: DeviceType = None,
         context_token: str = "</CONTEXT>",
         get_explanation: bool = True,
-        automatic_contextualisation: bool = False
+        automatic_contextualisation: bool = False,
+        ner_corpus: str = "en_core_web_sm",
     ):
         """
         Initializes the FactCheckerPipeline with a pre-trained model and tokenizer.
@@ -136,8 +83,6 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
             device (str): The device to use for computation ("cuda" or "cpu").
             processing_device (str): Device for paragraph processing ("cuda" or "cpu").
             llm_device (str): Device for the language model ("cuda" or "cpu").
-            tokenizer_kwargs (dict): Additional arguments for the tokenizer.
-            model_kwargs (dict): Additional arguments for the model.
             use_tqdm (bool): Whether to use tqdm for progress bars.
             llm (LLMInterface): The language model for generating explanations.
             storage_search_threshold (float): The threshold for searching in the vector storage.
@@ -148,13 +93,11 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
             context_token (str): Token to separate context from the sentence.
             get_explanation (bool): Whether to generate an explanation.
             automatic_contextualisation (bool): Whether to automatically contextualize the claim.
+            ner_corpus (str): The NER corpus to use for named entity recognition.
         """
         super().__init__(
             model_name=model_name,
             device=device,
-            tokenizer_kwargs=tokenizer_kwargs,
-            model_kwargs=model_kwargs,
-            use_tqdm=use_tqdm
         )
         self.context_setter: Union[Callable[..., None], None] = None
 
@@ -195,6 +138,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         ).to(processing_device)
 
         self.cross_encoder = CrossEncoder('cross-encoder/stsb-roberta-base', device=device)
+        self.nlp = spacy.load(ner_corpus, enable=["transformer", "ner", "tok2vec"])
         self.vector_storage = vector_storage
         self.storage_search_k = storage_search_k
         self.storage_search_threshold = storage_search_threshold
@@ -203,35 +147,34 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         self.temperature = temperature
         self.context_token = context_token
         self.cross_encoder_threshold = cross_encoder_threshold
+        self.use_tqdm = use_tqdm
 
     @staticmethod
     def _process_text(text):
         return "".join([char for char in text.lower() if char.isalnum() or char.isspace()]).strip()
 
-    def _predict(self, claim: str, *, is_original: bool = False) -> List[SuggestionResponse]:
-        # TODO: fact checking with NER
+    def _predict(
+        self,
+        claim: str,
+        *,
+        is_original: bool = False,
+        ner_list: List[str] = None
+    ) -> List[SuggestionResponse]:
         processed_text = self._process_text(str(claim))
         metadata = self.vector_storage.search(
             processed_text,
             k=self.storage_search_k,
-            threshold=self.storage_search_threshold
+            threshold=self.storage_search_threshold,
+            ner=ner_list
         )
-        correct_metadata = []
-        for item in metadata:
-            label_scores = self.cross_encoder.predict(
-                [(processed_text, item['metadata']['text'])],
-                show_progress_bar=False, batch_size=1
-            )[0]
-            if label_scores >= self.cross_encoder_threshold:
-                correct_metadata.append(item)
-        historical_data = self._metadata2text(correct_metadata)
+        historical_data = self._metadata2text(metadata)
 
-        if len(historical_data) < 10:
+        if len(historical_data) == 0:
             return []
 
         result = super().__call__(str(claim), historical_data)
 
-        if torch.argmax(result[0], dim=1).item() == 0:
+        if result != 0:
             return []
 
         explanation = self.llm(
@@ -289,6 +232,8 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         if self.context_setter is not None:
             self.context_setter(context)
 
+        entities = [entity.text for entity in self.nlp(self._process_text(text)).ents]
+        # entities = []
         sentences = self.processing_pipeline(text)  # type: list[str]
 
         if len(sentences) == 0:
@@ -298,7 +243,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         for sentence in tqdm(sentences, desc="Evaluating sentences", disable=not self.use_tqdm):
             if len(sentence) == 0:
                 continue
-            result = self._predict(sentence, is_original=True)
+            result = self._predict(sentence, is_original=True, ner_list=entities)
             if result is not None:
                 results.extend(result)
         return results

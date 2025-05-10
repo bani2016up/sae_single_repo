@@ -42,6 +42,7 @@ class CorefResolver(DeviceAwareModel):
         device: DeviceType = "cpu",
         use_logger: bool = False,
         context_token: str = "</CONTEXT>",
+        sentence_splitter: str = "en_core_web_sm",
     ):
         """
         Initialize the coreference model.
@@ -52,6 +53,7 @@ class CorefResolver(DeviceAwareModel):
             device (DeviceType): Device to load the model on ("cpu" or "cuda").
             use_logger (bool): Whether to enable the fastcoref logger.
             context_token (str): Token indicating context in text.
+            sentence_splitter (str): Sentence splitter model to use. Defaults to "en_core_web_sm".
         """
         super().__init__(device=device)
         self._set_fastcoref_logger(use_logger)
@@ -64,7 +66,7 @@ class CorefResolver(DeviceAwareModel):
             enable_progress_bar=enable_progress_bar,
             device=device
         )
-        self.nlp = spacy.load("en_core_web_sm", disable=["ner", "parser"])
+        self.nlp = spacy.load(sentence_splitter)
         self.nlp.add_pipe("sentencizer")
         self._context_token: str = context_token
         self._context: str = ""
