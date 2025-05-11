@@ -71,6 +71,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         context_token: str = "</CONTEXT>",
         get_explanation: bool = True,
         automatic_contextualisation: bool = False,
+        enable_ner: bool = True,
         ner_corpus: str = "en_core_web_sm",
     ):
         """
@@ -148,6 +149,7 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         self.context_token = context_token
         self.cross_encoder_threshold = cross_encoder_threshold
         self.use_tqdm = use_tqdm
+        self.enable_ner = enable_ner
 
     @staticmethod
     def _process_text(text):
@@ -232,8 +234,8 @@ class FactCheckerPipeline(FactCheckerInterface, FactCheckingModel):
         if self.context_setter is not None:
             self.context_setter(context)
 
-        entities = [entity.text for entity in self.nlp(self._process_text(text)).ents]
-        # entities = []
+        entities = [entity.text for entity in self.nlp(self._process_text(text)).ents] if self.enable_ner else []
+
         sentences = self.processing_pipeline(text)  # type: list[str]
 
         if len(sentences) == 0:
