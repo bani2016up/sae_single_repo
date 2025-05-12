@@ -94,13 +94,21 @@ class VectorStorage(VectorStorageInterface):
         for idx, md in zip(ids, metadata):
             self._metadata[idx] = md
 
-    def search(self, text: str, *, k: int = 5, threshold: float = 1.0) -> List[DocumentMetadataType]:
+    def search(
+        self,
+        text: str,
+        *,
+        k: int = 5,
+        threshold: float = 1.0,
+        ner: list[str] = None
+    ) -> List[DocumentMetadataType]:
         """
         Search for the nearest neighbors of the given text in the vector storage.
         Args:
             text (str): The text to search for.
             k (int): The number of nearest neighbors to return.
             threshold (float): The distance threshold for filtering results.
+            ner (list[str], optional): Named entities to filter results.
         Returns:
             List[Dict[str, Any]]: A list of dictionaries containing the ID, score,
                                   and metadata of the nearest neighbors.
@@ -109,6 +117,8 @@ class VectorStorage(VectorStorageInterface):
         """
         if self.embedder is None:
             raise ValueError("Embedder function must be provided.")
+        if ner:
+            text = f"{' '.join(ner)}\n{text}"
         query_vec = self.embedder(text, show_progress_bar=False)
         query_vec /= np.linalg.norm(query_vec)  # L2 normalization
         query_vec = np.asarray([query_vec], dtype="float32")
