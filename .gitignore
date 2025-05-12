@@ -174,3 +174,9 @@ cython_debug/
 .pypirc
 *.DS_Store
 .poetry/
+
+data
+*.pkl
+*.index
+notebooks/setup_clearml_env.py
+backend.zip

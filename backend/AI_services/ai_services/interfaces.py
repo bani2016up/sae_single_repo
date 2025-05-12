@@ -7,37 +7,89 @@ Interfaces:
     - ``VectorStorageInterface``: Interface for vector storage backends.
 """
 
-from abc import ABC, abstractmethod
-from typing import Any, List, Dict, Literal
+import functools
+
+from abc import ABC, abstractmethod, ABCMeta
+from typing import List, Dict, Self
 
 from .response import SuggestionResponse
+from .typing import DeviceType, PromptType, DocumentMetadataType
 
 __all__ = (
     "DeviceAwareModel",
     "FactCheckerInterface",
-    "VectorStorageInterface"
+    "VectorStorageInterface",
+    "PromptInterface",
+    "LLMInterface"
 )
 
 
+class _CatchKIMeta(ABCMeta):
+    @staticmethod
+    def _catch_keyboard_interrupt(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except KeyboardInterrupt:
+                print(f"Interrupted in {func.__qualname__}")
 
-class DeviceAwareModel(ABC):
+        return wrapper
+
+    @staticmethod
+    def _catch_keyboard_interrupt_classmethod(func):
+        @functools.wraps(func)
+        def wrapper(cls, *args, **kwargs):
+            try:
+                return func(cls, *args, **kwargs)
+            except KeyboardInterrupt:
+                print(f"Interrupted in {func.__qualname__}")
+
+        return wrapper
+
+    def __new__(mcs, name, bases, namespace):
+        for attr_name, attr_val in list(namespace.items()):
+            if attr_name.startswith("__"):
+                continue
+
+            if isinstance(attr_val, staticmethod):
+                original_func = attr_val.__func__
+                wrapped = mcs._catch_keyboard_interrupt(original_func)
+                namespace[attr_name] = staticmethod(wrapped)
+
+            elif isinstance(attr_val, classmethod):
+                original_func = attr_val.__func__
+                wrapped = mcs._catch_keyboard_interrupt_classmethod(original_func)
+                namespace[attr_name] = classmethod(wrapped)
+
+            elif callable(attr_val):
+                namespace[attr_name] = mcs._catch_keyboard_interrupt(attr_val)
+
+        if "__call__" in namespace and "forward" not in namespace:
+            # usually the other way round, but I'm too lazy to redo it
+            namespace["forward"] = namespace["__call__"]
+
+        return super().__new__(mcs, name, bases, namespace)
+
+
+class DeviceAwareModel(ABC, metaclass=_CatchKIMeta):
     """
     Abstract base class for all device-aware models.
 
     Defines a common interface for managing device placement.
     """
 
-    def __init__(self, *, device: Literal["cpu", "cuda"] = "cuda"):
+    def __init__(self, *, device: DeviceType = "cuda"):
         """
         Initializes the model on the specified device.
 
         Parameters:
             device (Literal["cpu", "cuda"]): Target device for model operations.
         """
-        self.device = device
+        self._device = device
 
     @abstractmethod
-    def to(self, device: Literal["cpu", "cuda"]) -> None:
+    def to(self, device: DeviceType) -> Self:
         """
         Transfers the model to the specified device.
 
@@ -51,6 +103,16 @@ class DeviceAwareModel(ABC):
             model.to("cuda")
         """
         ...
+
+    @property
+    def device(self) -> DeviceType:
+        """
+        Returns the current device of the model.
+
+        Returns:
+            Literal["cpu", "cuda"]: The current device.
+        """
+        return self._device
 
 
 class FactCheckerInterface(DeviceAwareModel):
@@ -93,7 +155,12 @@ class VectorStorageInterface(ABC):
     """
 
     @abstractmethod
-    def add_document(self, index: int, text: str, metadata: Dict[str, Any]) -> None:
+    def add_document(
+        self,
+        index: int,
+        text: str,
+        metadata: DocumentMetadataType
+    ) -> None:
         """
         Store a single document or fact vector in the index.
 
@@ -105,7 +172,12 @@ class VectorStorageInterface(ABC):
         ...
 
     @abstractmethod
-    def add_documents(self, ids: List[int], texts: List[str], metadata: List[Dict[str, Any]]) -> None:
+    def add_documents(
+        self,
+        ids: List[int],
+        texts: List[str],
+        metadata: List[DocumentMetadataType]
+    ) -> None:
         """
         Store multiple documents or fact vectors in bulk.
 
@@ -117,14 +189,22 @@ class VectorStorageInterface(ABC):
         ...
 
     @abstractmethod
-    def search(self, text: str, *, k: int = 2) -> List[Dict[str, Any]]:
+    def search(
+        self,
+        text: str,
+        *,
+        k: int = 5,
+        threshold: float = 1.0,
+        ner: List[str] = None
+    ) -> List[DocumentMetadataType]:
         """
         Perform a semantic similarity search for the given query.
 
         Args:
             text (str): The query text to search for.
             k (int, optional): The number of nearest neighbors to return.
-
+            threshold (float, optional): The minimum similarity score for results.
+            ner (list[str], optional): Named entities to filter results.
         Returns:
             List[Dict[str, Any]]: A list of search results, each containing
         """
@@ -167,5 +247,33 @@ class VectorStorageInterface(ABC):
 
         Args:
             filepath (str): Destination path for saving the index.
+        """
+        ...
+
+
+class PromptInterface(ABC):
+    @abstractmethod
+    def __call__(self, **kwargs) -> PromptType:
+        ...
+
+
+class LLMInterface(DeviceAwareModel):
+    """
+    Abstract base class for LLM (Large Language Model) interfaces.
+    This class defines the interface for LLMs, including methods for
+    generating text and managing device placement.
+    """
+
+    @abstractmethod
+    def __call__(self, *args, **kwargs) -> str:
+        """
+        Generates text based on the provided input arguments.
+
+        Args:
+            *args: Positional arguments for the model.
+            **kwargs: Keyword arguments for the model.
+
+        Returns:
+            str: The generated text.
         """
         ...
