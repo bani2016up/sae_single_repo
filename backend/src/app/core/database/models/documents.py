@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Text, DateTime, func
 from sqlalchemy.orm import relationship
-from db.database import Base
+from ..db.database import Base
 
 
 class Document(Base):

@@ -1,4 +1,4 @@
-from app.core.db.connection import AsyncSession
+from .database.connection import AsyncSession
 from typing import Final
 
 type idType = int

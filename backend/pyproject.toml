@@ -25,7 +25,8 @@ dependencies = [
     "uvicorn>=0.34.2",
     "supabase>=2.15.0",
     "python-jose>=3.4.0",
-    "h11==0.16.0"
+    "h11==0.16.0",
+    "python-multipart (>=0.0.20,<0.0.21)"
 ]
 
 [tool.poetry]

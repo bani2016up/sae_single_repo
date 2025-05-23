@@ -41,7 +41,7 @@ async def verify_token(request: Request) -> TokenPayload:
         return TokenPayload(**payload)
     except JWTError as e:
         logger.error(e)
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Invalid token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
 
 async def register(user: UserRegister) -> UserRegisterResponse:
@@ -71,7 +71,7 @@ async def login(user: UserLogin) -> JSONResponse:
         return response
     except Exception as e:
         logger.error(e)
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Login failed")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Login failed")
 
 
 async def logout(payload: TokenPayload) -> JSONResponse:
