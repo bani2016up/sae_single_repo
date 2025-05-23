@@ -1,7 +1,7 @@
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from app.core.db.connection import SessionLocal, AsyncSession
+from app.core.database.connection import SessionLocal, AsyncSession
 from ..pydantic import BaseResponse
 
 

@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
+
 async def verify_token(request: Request) -> TokenPayload:
     access_token = request.cookies.get(ACCESS_TOKEN)
     if not access_token:

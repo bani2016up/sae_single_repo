@@ -1,0 +1,37 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Toktamysov Timur",email = "timur.toktamysov@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12,<4.0"
+dependencies = [
+    "sqlalchemy>=2.0.40",
+    "alembic>=1.15.2",
+    "pydantic[email]>=2.11.4",
+    "dotenv>=0.9.9",
+    "annotated-types>=0.7.0",
+    "anyio>=4.9.0",
+    "asyncpg>=0.30.0",
+    "click>=8.1.8",
+    "greenlet>=3.2.0",
+    "typing-inspection>=0.4.0",
+    "psycopg2-binary>=2.9.10",
+    "python-dotenv>=1.1.0",
+    "email-validator>=2.2.0",
+    "fastapi>=0.115.12",
+    "uvicorn>=0.34.2",
+    "supabase>=2.15.0",
+    "python-jose>=3.4.0",
+    "h11==0.16.0"
+]
+
+[tool.poetry]
+packages = [{include = "backend", from = "src"}]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

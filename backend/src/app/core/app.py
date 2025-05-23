@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 
 from .middlewares import *  # contains ONLY middlewares
-
 from .config.api import origins, methods, headers, allow_credentials, max_age
 from .config.metadata import version
 
@@ -10,12 +9,13 @@ app = FastAPI(
     title="CRUD Backend API",
     version=version,
     contact={
-        "name": "AIMES Tech",
+        "name": "SAE",
     },
 )
 
 app.add_middleware(DatabaseAsyncSessionManager)
 app.add_middleware(DynamicCORSMiddleware)
+app.add_middleware(AutoRefreshTokenMiddleware)
 
 
 app.add_middleware(
