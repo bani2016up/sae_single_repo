@@ -19,7 +19,17 @@ from ..config.cfg import (
     DEV_MODE,
 )
 from ..models.token import TokenPayload
-from ..models.users import UserLogin, UserRegister, UserRegisterResponse
+from ..models.credentials import CredentialsResponse
+from ..models.users import (
+    UserLogin,
+    UserRegister,
+    UserRegisterResponse,
+    PasswordResetRequest,
+    PasswordResetResponse,
+    AuthTokens,
+    UserCredentialsChangeRequest,
+    UserCredentialsChangeResponse,
+)
 
 logging.basicConfig(level=getattr(logging, SERVICES_LOG_LEVEL, logging.INFO))
 logger = logging.getLogger(__name__)
@@ -27,11 +37,12 @@ logger = logging.getLogger(__name__)
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
-
 async def verify_token(request: Request) -> TokenPayload:
     access_token = request.cookies.get(ACCESS_TOKEN)
     if not access_token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+        )
     try:
         payload = jwt.decode(
             access_token,
@@ -42,7 +53,9 @@ async def verify_token(request: Request) -> TokenPayload:
         return TokenPayload(**payload)
     except JWTError as e:
         logger.error(e)
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        )
 
 
 async def register(user: UserRegister) -> UserRegisterResponse:
@@ -53,7 +66,9 @@ async def register(user: UserRegister) -> UserRegisterResponse:
         return UserRegisterResponse(message="User created", user_id=response.user.id)
     except Exception as e:
         logger.error(e)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Registration failed")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Registration failed"
+        )
     # Users should login by themselves after registration, because I hate them.
 
 
@@ -62,17 +77,14 @@ async def login(user: UserLogin) -> JSONResponse:
         res = supabase.auth.sign_in_with_password(
             {"email": user.email, "password": user.password}
         )
-        response = JSONResponse(
-            content={
-                ACCESS_TOKEN: res.session.access_token,
-                REFRESH_TOKEN: res.session.refresh_token,
-            }
-        )
+        response = JSONResponse(content={"message": "Logged in"})
         set_auth_cookies(response, res.session.access_token, res.session.refresh_token)
         return response
     except Exception as e:
         logger.error(e)
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Login failed")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Login failed"
+        )
 
 
 async def logout(payload: TokenPayload) -> JSONResponse:
@@ -84,7 +96,9 @@ async def logout(payload: TokenPayload) -> JSONResponse:
         return response
     except Exception as e:
         logger.error(e)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Logout failed")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Logout failed"
+        )
 
 
 def give_account_info(payload: TokenPayload) -> TokenPayload:
@@ -93,13 +107,17 @@ def give_account_info(payload: TokenPayload) -> TokenPayload:
 
 async def delete_all_cookies() -> JSONResponse:
     try:
-        response = JSONResponse(content={"message": "Auth cookies successfully deleted"})
+        response = JSONResponse(
+            content={"message": "Auth cookies successfully deleted"}
+        )
         response.delete_cookie(ACCESS_TOKEN)
         response.delete_cookie(REFRESH_TOKEN)
         return response
     except Exception as e:
         logger.error(e)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cookies cannot be deleted")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Cookies cannot be deleted"
+        )
 
 
 def set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: str):
@@ -108,7 +126,7 @@ def set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: s
         value=access_token,
         httponly=True,
         samesite="Lax",
-        secure=not(DEV_MODE),
+        secure=not (DEV_MODE),
         max_age=ACCESS_TOKEN_MAX_AGE,
         expires=datetime.now(timezone.utc) + timedelta(seconds=ACCESS_TOKEN_MAX_AGE),
     )
@@ -117,8 +135,66 @@ def set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: s
         value=refresh_token,
         httponly=True,
         samesite="Strict",
-        secure=not(DEV_MODE), 
+        secure=not (DEV_MODE),
         max_age=REFRESH_TOKEN_MAX_AGE,
         expires=datetime.now(timezone.utc) + timedelta(seconds=REFRESH_TOKEN_MAX_AGE),
     )
     return response
+
+
+async def send_password_reset(user: PasswordResetRequest) -> PasswordResetResponse:
+    try:
+        supabase.auth.reset_password_for_email(
+            user.email,
+            {
+                "redirect_to": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                # CHANGE IT TO ACTUAL LINK AFTER FRONTEND DID IT JOB
+            },
+        )
+        return PasswordResetResponse(
+            email=user.email,
+            message="A password reset link has been sent to your email.",
+        )
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Sending email with password reset failed",
+        )
+
+
+async def login_with_password_reset(tokens: AuthTokens) -> TokenPayload:
+    try:
+        response = JSONResponse(content={"message": "Logged in"})
+
+        set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
+        supabase.auth.set_session(tokens.access_token, tokens.refresh_token)
+        supabase.auth.refresh_session()
+        return response
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Logout failed"
+        )
+
+
+async def change_password(
+    payload: TokenPayload, credentials: UserCredentialsChangeRequest
+) -> CredentialsResponse:
+    try:
+        response = supabase.auth.update_user({"password": credentials.new_password})
+        return response
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+async def change_email(
+    payload: TokenPayload, credentials: UserCredentialsChangeRequest
+) -> CredentialsResponse:
+    try:
+        response = supabase.auth.update_user({"email": credentials.new_email})
+        return response
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
