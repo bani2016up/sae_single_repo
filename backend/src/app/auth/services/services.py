@@ -92,7 +92,7 @@ def give_account_info(payload: TokenPayload) -> TokenPayload:
 
 async def delete_all_cookies() -> JSONResponse:
     try:
-        response = JSONResponse(content={"message": "Logged out"})
+        response = JSONResponse(content={"message": "Auth cookies successfully deleted"})
         response.delete_cookie(ACCESS_TOKEN)
         response.delete_cookie(REFRESH_TOKEN)
         return response

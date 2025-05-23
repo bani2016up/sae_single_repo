@@ -39,6 +39,6 @@ async def get_current_user(payload: TokenPayload = Depends(verify_token)):
 
 if DEV_MODE:
 
-    @auth_router.get("/delete_all_cookies")
-    async def delete_all_cookies():
+    @auth_router.delete("/delete_all_acookies")
+    async def delete_auth_cookies():
         return await delete_all_cookies()
