@@ -16,6 +16,7 @@ from ..config.cfg import (
     ACCESS_TOKEN,
     REFRESH_TOKEN,
     SERVICES_LOG_LEVEL,
+    DEV_MODE,
 )
 from ..models.token import TokenPayload
 from ..models.users import UserLogin, UserRegister, UserRegisterResponse
@@ -107,7 +108,7 @@ def set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: s
         value=access_token,
         httponly=True,
         samesite="Lax",
-        secure=True,
+        secure=not(DEV_MODE),
         max_age=ACCESS_TOKEN_MAX_AGE,
         expires=datetime.now(timezone.utc) + timedelta(seconds=ACCESS_TOKEN_MAX_AGE),
     )
@@ -116,7 +117,7 @@ def set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: s
         value=refresh_token,
         httponly=True,
         samesite="Strict",
-        secure=True,
+        secure=not(DEV_MODE), 
         max_age=REFRESH_TOKEN_MAX_AGE,
         expires=datetime.now(timezone.utc) + timedelta(seconds=REFRESH_TOKEN_MAX_AGE),
     )
