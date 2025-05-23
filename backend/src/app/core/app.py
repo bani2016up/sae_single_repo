@@ -13,9 +13,6 @@ app = FastAPI(
     },
 )
 
-app.add_middleware(DatabaseAsyncSessionManager)
-app.add_middleware(DynamicCORSMiddleware)
-app.add_middleware(AutoRefreshTokenMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -24,4 +21,8 @@ app.add_middleware(
     allow_credentials=allow_credentials,
     max_age=max_age,
 )
+app.add_middleware(DynamicCORSMiddleware)
+app.add_middleware(DatabaseAsyncSessionManager)
+app.add_middleware(AutoRefreshTokenMiddleware)
+
 app.include_router(api_router, prefix="/api", tags=["API"])
