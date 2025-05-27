@@ -1,17 +1,18 @@
-import { useState } from 'react'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import SignWrapper from "./components/SignWrapper/SignWrapper";
+import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SingUp";
 import './App.css'
-// import Editor from './pages/Editor.jsx'
-// import SignUp from './pages/SingUp.jsx'
-// import SignIn from './pages/SignIn.jsx'
-import SignWrapper from './components/SignWrapper/SignWrapper.jsx'
-
-
 
 export default function App() {
   return (
-    <div>
-      <SignWrapper>Sign up</SignWrapper>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/signin" element={<SignIn />} />
+        {/* Add more routes as needed */}
+      </Routes>
+    </BrowserRouter>
   );
 }
 

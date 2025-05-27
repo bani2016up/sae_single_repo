@@ -1,15 +1,9 @@
-import SignInput from "../components/SignInput/SignInput";
-import SignButton from "../components/SignButton/SignButton";
+import SignWrapper from "../components/SignWrapper/SignWrapper";
 
 
 export default function SignIn() {
 
-
     return (
-        <>
-            <SignInput ty="email">Email</SignInput>
-            <SignInput ty="password">Password</SignInput>
-            <SignInput ty="password">Confirm password</SignInput>
-        </>
+        <SignWrapper htype="up">Sign in</SignWrapper>
     );
 }

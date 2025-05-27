@@ -1,14 +1,15 @@
 import "./SignButton.css";
 
 
-export default function SignButton({ children }) {
-    function handleClick() {
-        console.log("SingButton button clicked");
-    }
+export default function SignButton({ children, handleSignButtonClick_ }) {
 
-    return (<button className="sign-button" onClick={handleClick}>
-        {children}
-    </button>
+    return (
+        <button
+            className="sign-button"
+            onClick={handleSignButtonClick_}
+        >
+            {children}
+        </button>
     )
 
 }

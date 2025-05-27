@@ -1,11 +1,8 @@
-import SigdField from "../components/SignInput/SignInput";
-import SignButton from "../components/SignButton/SignButton";
-
+import SignWrapper from "../components/SignWrapper/SignWrapper";
 
 export default function SignUp() {
 
-
     return (
-        <h1>Up</h1>
+        <SignWrapper htype="in">Sign up</SignWrapper>
     );
 }
