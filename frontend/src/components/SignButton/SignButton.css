@@ -1,0 +1,23 @@
+
+.sign-button {
+    background-color: #DDDDDD;
+    border: none;
+    color: black;
+    border-radius: 40px;
+    width: 313px;
+    height: 74px;
+    font-size: 24px;
+    font-weight: 200;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    /* transition: all 0.3s; */
+    margin-top: 50px;
+    }
+
+.sign-button:hover {
+    background-color : #c5c5c5;
+}
+.sign-button:active {
+    background-color: #7b7b7b;
+
+}

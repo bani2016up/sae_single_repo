@@ -1,0 +1,33 @@
+.sign-wrapper {
+    background: #313131;
+    width: 733px;
+    height: 868px;
+    margin-top: 30px;
+    place-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.wrapper{
+    margin-bottom: 100px;
+}
+
+img {
+    margin-bottom: 15px;
+}
+
+.sign-text {
+    margin-top: 80px;
+    /* position: absolute; */
+    /* left: 290px; */
+}
+
+a {
+    color: #FFFFFF;
+    margin-left: 5px;
+}
+
+/* .input-border {
+    width: 283px;
+    height: 46px;
+} */
+
