@@ -4,12 +4,20 @@ from app.core.types import AsyncSession, idType
 
 from ..schemas.response.document import DocumentResponse, DocumentExtendedResponse
 from app.api.services import document as document_service
-from app.api.routes.v1.schemas.request.document import CreateDocumentRequest, DocumentTitleUpdateRequest, DocumentTokenDeleteRequest, DocumentTokenInsertRequest
+from app.api.routes.v1.schemas.request.document import (
+    CreateDocumentRequest,
+    DocumentTitleUpdateRequest,
+    DocumentTokenDeleteRequest,
+    DocumentTokenInsertRequest,
+)
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
+
 @router.post("/", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
-async def create_document(request: Request, response: Response, schema: CreateDocumentRequest) -> DocumentResponse:
+async def create_document(
+    request: Request, response: Response, schema: CreateDocumentRequest
+) -> DocumentResponse:
     """
     Create a new document for the authenticated user.
 
@@ -26,6 +34,7 @@ async def create_document(request: Request, response: Response, schema: CreateDo
     response.status_code = status.HTTP_201_CREATED
     return await document_service.create_document(internal_user_id, schema, sess)
 
+
 @router.get("/", response_model=dict[str, List[DocumentResponse]])
 async def get_documents(request: Request) -> dict[str, List[DocumentResponse]]:
     """
@@ -41,8 +50,13 @@ async def get_documents(request: Request) -> dict[str, List[DocumentResponse]]:
     sess: AsyncSession = request.state.sess
     return {"data": await document_service.get_documents(internal_user_id, sess)}
 
-@router.post("/from-file", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
-async def create_document_from_file(request: Request, response: Response, file: UploadFile = File(...)) -> DocumentResponse:
+
+@router.post(
+    "/from-file", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED
+)
+async def create_document_from_file(
+    request: Request, response: Response, file: UploadFile = File(...)
+) -> DocumentResponse:
     """
     Create a new document from an uploaded file for the authenticated user.
 
@@ -57,7 +71,10 @@ async def create_document_from_file(request: Request, response: Response, file: 
     internal_user_id: idType = request.state.internal_user_id
     sess: AsyncSession = request.state.sess
     response.status_code = status.HTTP_201_CREATED
-    return await document_service.create_document_from_file(internal_user_id, file, sess)
+    return await document_service.create_document_from_file(
+        internal_user_id, file, sess
+    )
+
 
 @router.delete("/{pk}", response_model=None)
 async def delete_document(request: Request, response: Response, pk: idType) -> Response:
@@ -77,8 +94,11 @@ async def delete_document(request: Request, response: Response, pk: idType) -> R
     response.status_code = status.HTTP_204_NO_CONTENT
     return response
 
+
 @router.patch("/{pk}/title", response_model=DocumentResponse)
-async def update_document_title(request: Request, response: Response, pk: idType, schema: DocumentTitleUpdateRequest) -> DocumentResponse:
+async def update_document_title(
+    request: Request, response: Response, pk: idType, schema: DocumentTitleUpdateRequest
+) -> DocumentResponse:
     """
     Update an existing document title by its primary key.
 
@@ -114,15 +134,21 @@ async def get_document(request: Request, pk: idType) -> DocumentExtendedResponse
     sess: AsyncSession = request.state.sess
     return await document_service.get_document(pk, sess)
 
+
 @router.patch("/{pk}/token")
-async def insert_document_content(request: Request, response: Response, pk: idType, schema: DocumentTokenInsertRequest) -> None:
+async def insert_document_content(
+    request: Request, response: Response, pk: idType, schema: DocumentTokenInsertRequest
+) -> None:
     # sourcery skip: avoid-builtin-shadow
     __doc__ = document_service.insert_document_token.__doc__
     sess: AsyncSession = request.state.sess
     return await document_service.insert_document_token(pk, schema, sess)
 
-@router.patch("/{pk}/token")
-async def delete_document_content(request: Request, response: Response, pk: idType, schema: DocumentTokenDeleteRequest) -> None:
+
+@router.delete("/{pk}/token")
+async def delete_document_content(
+    request: Request, response: Response, pk: idType, schema: DocumentTokenDeleteRequest
+) -> None:
     # sourcery skip: avoid-builtin-shadow
     __doc__ = document_service.delete_document.__doc__
     sess: AsyncSession = request.state.sess
