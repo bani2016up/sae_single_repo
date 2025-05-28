@@ -1,0 +1,53 @@
+.sign-wrapper {
+    background: #313131;
+    width: 733px;
+    height: 868px;
+    margin-top: 30px;
+    place-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.error-message {
+    color: #FF8E8E;
+    margin-top: 30px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.wrapper{
+    margin-bottom: 100px;
+}
+
+img {
+    margin-bottom: 15px;
+}
+
+.sign-text {
+    margin-top: 80px;
+    color: #ffffff;
+    /* position: absolute; */
+    /* left: 290px; */
+}
+
+text {
+    font-family: 'Inter', sans-serif;
+    color: #c2c2c2;
+;
+
+}
+
+a {
+    color: #FFFFFF;
+    margin-left: 5px;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* .input-border {
+    width: 283px;
+    height: 46px;
+} */
+

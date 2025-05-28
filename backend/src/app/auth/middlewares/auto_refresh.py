@@ -12,7 +12,7 @@ from ..config.cfg import (
     REFRESH_TOKEN,
     AUTO_REFRESH_LOG_LEVEL,
 )
-from ..services.services import set_auth_cookies
+from ..services.services import set_auth_cookies,delete_all_cookies
 
 # logging stays here, because I love it AND DON'T U DARE TAKE IT AWAY FROM ME!!!!
 logging.basicConfig(level=getattr(logging, AUTO_REFRESH_LOG_LEVEL, logging.INFO))
@@ -30,6 +30,7 @@ class AutoRefreshTokenMiddleware(BaseHTTPMiddleware):
             return await self.handle_no_tokens(request, call_next)
 
         if not access_token:
+            print(refresh_token)
             return await self.handle_only_refresh_token(
                 request, call_next, refresh_token
             )
@@ -63,9 +64,10 @@ class AutoRefreshTokenMiddleware(BaseHTTPMiddleware):
             return response
         except Exception as e:
             logger.error(f"Failed to refresh token: {str(e)}")
+            delete_all_cookies()
             return JSONResponse(
                 status_code=401,
-                content={"detail": "Failed to refresh token"},
+                content={"detail": "Failed to refresh token, all auth cookies now deleted."},
             )
 
     async def handle_only_access_token(self, request: Request, call_next):
