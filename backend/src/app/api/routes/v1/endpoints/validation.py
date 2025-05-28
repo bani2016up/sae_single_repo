@@ -20,9 +20,9 @@ async def create_validation(request: Request, response: Response, item: CreateVa
         DocumentValidationResponse: The response model containing the details of the created validation.
     """
     sess: AsyncSession = request.state.sess
-    user_id: idType = request.state.user_id
+    internal_internal_user_id: idType = request.state.internal_user_id
     response.status_code = status.HTTP_201_CREATED
-    return await validation_service.create_validation(user_id, item, sess)
+    return await validation_service.create_validation(internal_user_id, item, sess)
 
 @router.post("/{pk}/start", response_model=DocumentValidationResponse)
 async def start_validation(request: Request, response: Response, pk: int) -> DocumentValidationResponse:

@@ -92,13 +92,13 @@ async def get_validation_errors(
 
 
 async def create_validation(
-    user_id: idType, schema: CreateValidationRequest, sess: AsyncSession
+    internal_user_id: idType, schema: CreateValidationRequest, sess: AsyncSession
 ) -> DocumentValidationResponse:
     """
     Creates a new validation entry for a document.
 
     Parameters:
-    user_id (idType): The ID of the user creating the validation.
+    internal_user_id (idType): The ID of the user creating the validation.
     schema (CreateValidationRequest): The request model containing the validation details.
     sess (AsyncSession): The database session used for the operation.
 
@@ -114,7 +114,7 @@ async def create_validation(
         )
 
     validation = Validation(
-        user_id=user_id,
+        internal_user_id=internal_user_id,
         document_id=schema.document_id,
         validated=False,
         is_valid=None
