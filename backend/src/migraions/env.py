@@ -5,11 +5,7 @@ from dotenv import load_dotenv
 import os
 
 # Import your Base and models
-from db.database import Base
-from models.users import User
-from models.documents import Document
-from models.validations import Validation
-from models.errors import Error
+from app.core.database.models import User, Document, Validation, Error, Base
 # Import all your models here
 
 # Load environment variables from .env
