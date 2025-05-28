@@ -5,6 +5,9 @@ from fastapi import Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from jose import JWTError, ExpiredSignatureError, jwt
 from supabase import Client, create_client
+from app.core.database.dao import UserDAO, User
+from app.core.database.connection import AsyncSession
+
 
 from ..config.cfg import (
     ACCESS_TOKEN_MAX_AGE,
@@ -55,20 +58,25 @@ async def verify_token(request: Request) -> TokenPayload:
         logger.error(e)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
-        )
+        ) from e
 
 
-async def register(user: UserRegister) -> UserRegisterResponse:
+async def register(user: UserRegister, sess: AsyncSession) -> UserRegisterResponse:
     try:
         response = supabase.auth.sign_up(
             {"email": user.email, "password": user.password}
         )
+        await UserDAO.create(User(
+            external_id=response.user.id,
+            username=user.email,
+            email=user.email
+        ), sess)
         return UserRegisterResponse(message="User created", user_id=response.user.id)
     except Exception as e:
         logger.error(e)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Registration failed"
-        )
+        ) from e
     # Users should login by themselves after registration, because I hate them.
 
 

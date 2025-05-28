@@ -30,7 +30,6 @@ class AutoRefreshTokenMiddleware(BaseHTTPMiddleware):
             return await self.handle_no_tokens(request, call_next)
 
         if not access_token:
-            print(refresh_token)
             return await self.handle_only_refresh_token(
                 request, call_next, refresh_token
             )

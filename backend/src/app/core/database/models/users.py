@@ -7,9 +7,11 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    external_id = Column(String, nullable=False, unique=True, index=True)
     username = Column(String, nullable=False, unique=True)
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
     email = Column(String, nullable=False, unique=True)
-    password = Column(String, nullable=False)
+
+    # Relationships
     documents = relationship("Document", back_populates="user")

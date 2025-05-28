@@ -28,8 +28,8 @@ security = HTTPBearer()
 
 
 @auth_router.post("/users")
-async def sign_up(user: UserRegister):
-    return await register(user)
+async def sign_up(user: UserRegister, request: Request):
+    return await register(user, request.state.sess)
 
 
 @auth_router.post("/sessions")
