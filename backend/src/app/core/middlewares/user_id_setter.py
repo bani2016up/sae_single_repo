@@ -26,6 +26,4 @@ class InternalUserIdSetter(BaseHTTPMiddleware):
             )
             internal_user_id = user.id if user else None
         request.state.internal_user_id = internal_user_id
-        print(internal_user_id)
-
         return await call_next(request)
