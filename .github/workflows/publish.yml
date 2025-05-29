@@ -41,13 +41,11 @@ jobs:
       - name: Build & push backend
         uses: docker/build-push-action@v4
         with:
-          context: backend
+          context: backend/
           file: backend/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/sae-backend:latest
           push: true
-          tags: |
-            ghcr.io/${{ env.OWNER_LC }}/sae-backend:latest
-            ghcr.io/${{ env.OWNER_LC }}/sae-backend:${{ github.ref_name }}
+          platforms: linux/amd64,linux/arm64
   
 
   deploy:
