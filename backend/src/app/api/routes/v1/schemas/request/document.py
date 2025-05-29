@@ -5,5 +5,14 @@ class CreateDocumentRequest(BaseConfig):
     title: str
 
 
-class DocumentUpdateRequest(BaseConfig):
+class DocumentTitleUpdateRequest(BaseConfig):
     title: str
+
+class DocumentTokenInsertRequest(BaseConfig):
+    char: int
+    token: str
+
+
+class DocumentTokenDeleteRequest(BaseConfig):
+    char_start: int
+    char_end: int

@@ -15,6 +15,12 @@ class DatabaseAsyncSessionManager(BaseHTTPMiddleware):
                 await session.commit()
             except Exception as e:
                 await session.rollback()
-                error_response = BaseResponse(status=500, message=str(e))
-                response = JSONResponse(content=error_response.model_dump())
+                status = getattr(e, "status_code", 500)
+                error_response = BaseResponse(status=status, message=str(e))
+                response = JSONResponse(
+                    status_code=status,
+                    content=error_response.model_dump()
+                )
+            finally:
+                await session.close()
             return response
