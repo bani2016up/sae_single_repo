@@ -63,6 +63,7 @@ class AutoRefreshTokenMiddleware(BaseHTTPMiddleware):
             return response
         except Exception as e:
             logger.error(f"Failed to refresh token: {str(e)}")
+            await delete_all_cookies()
             return JSONResponse(
                 status_code=401,
                 content={"detail": "Failed to refresh token, all auth cookies now deleted."},
