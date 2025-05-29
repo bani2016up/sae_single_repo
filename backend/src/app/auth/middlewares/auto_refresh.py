@@ -63,11 +63,8 @@ class AutoRefreshTokenMiddleware(BaseHTTPMiddleware):
             return response
         except Exception as e:
             logger.error(f"Failed to refresh token: {str(e)}")
-            await delete_all_cookies()
-            return JSONResponse(
-                status_code=401,
-                content={"detail": "Failed to refresh token, all auth cookies now deleted."},
-            )
+            response = await delete_all_cookies()
+            return response
 
     async def handle_only_access_token(self, request: Request, call_next):
         logger.info("No refresh token found, access token found. How the fu-")
