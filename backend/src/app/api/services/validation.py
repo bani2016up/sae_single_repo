@@ -2,7 +2,7 @@ from typing import Optional
 from fastapi import HTTPException, status
 
 from app.core.dao import ValidationDAO, ErrorDAO, DocumentDAO, Validation, Document
-from app.api.routes.v1.schemas.request.validation import CreateValidationRequest
+from app.api.routes.v1.schemas.request.validation import StartValidationRequest
 from app.api.routes.v1.schemas.response.validation import (
     DocumentValidationResponse,
     DocumentValidationErrorsResponse,
@@ -11,21 +11,14 @@ from app.core.types import AsyncSession, idType
 from app.core.utils.validation import get_validation_schema
 
 
-
-
 async def start_validation(
-    pk: idType, sess: AsyncSession
+    document_pk: idType, sess: AsyncSession
 ) -> DocumentValidationResponse:
-    validation: Optional[Validation] = await ValidationDAO.get(pk, sess)
-    if not validation:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Validation not found"
-        )
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Validation implementation for AI check is not ready yet.",
-    )
-    return get_validation_schema(validation)
+    # validation: Optional[Validation] = await ValidationDAO.create(
+    #     Validation(document_id=document_pk), sess
+    # )
+    # return get_validation_schema(validation)
+
 
 
 async def reset_validation(pk: idType, sess: AsyncSession) -> None:
@@ -92,7 +85,7 @@ async def get_validation_errors(
 
 
 async def create_validation(
-    internal_user_id: idType, schema: CreateValidationRequest, sess: AsyncSession
+    internal_user_id: idType, schema: StartValidationRequest, sess: AsyncSession
 ) -> DocumentValidationResponse:
     """
     Creates a new validation entry for a document.
@@ -117,7 +110,7 @@ async def create_validation(
         internal_user_id=internal_user_id,
         document_id=schema.document_id,
         validated=False,
-        is_valid=None
+        is_valid=None,
     )
     created_validation: Validation = await ValidationDAO.create(validation, sess)
 

@@ -1,12 +1,12 @@
 
+from typing import Literal
 from app.core.pydantic import BaseConfig
 from .validation_error import ValidationErrorResponse
 
 
 class DocumentValidationResponse(BaseConfig):
     id: int
-    validated: bool
-    is_valid: bool
+    status: Literal["NOT_STARTED", "IN_PROGRESS", "COMPLETED"]
 
 
 class DocumentValidationErrorsResponse(BaseConfig):
