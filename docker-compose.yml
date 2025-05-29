@@ -32,9 +32,8 @@ services:
         export SQLALCHEMY_DATABASE_URL="postgresql+asyncpg://$$PGUSER:$$PGPASSWORD@db:5432/$$PGDATABASE"
         export DATABASE_URL="$${SQLALCHEMY_DATABASE_URL}"
         
-        poetry run alembic upgrade head
-        poetry run python -m spacy download en_core_web_trf
-        exec poetry run python main.py
+        python -m spacy download en_core_web_trf
+        python main.py
 
   db:
     image: postgres:15
