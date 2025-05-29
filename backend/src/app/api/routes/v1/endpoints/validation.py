@@ -7,8 +7,8 @@ from app.api.services import validation as validation_service
 router = APIRouter(prefix="/validation", tags=["Validation"])
 
 
-@router.post("/", response_model=DocumentValidationResponse)
-async def start_validation(request: Request, schema: StartValidationRequest,  pk: int) -> DocumentValidationResponse:
+@router.post("/")
+async def start_validation(request: Request, schema: StartValidationRequest) -> dict:
     """
     Start the validation process for a specific validation entry.
 
@@ -21,35 +21,35 @@ async def start_validation(request: Request, schema: StartValidationRequest,  pk
         DocumentValidationResponse: The response model containing the details of the started validation.
     """
     sess: AsyncSession = request.state.sess
-    return await validation_service.start_validation(schema, sess)
+    return {"data": await validation_service.start_validation(schema.document_id, sess)}
 
 
-@router.get("/{pk}", response_model=DocumentValidationResponse)
-async def get_validation(request: Request, pk: idType) -> DocumentValidationResponse:
-    """
-    Retrieve a specific validation entry by its primary key.
+# @router.get("/{pk}", response_model=DocumentValidationResponse)
+# async def get_validation(request: Request, pk: idType) -> DocumentValidationResponse:
+#     """
+#     Retrieve a specific validation entry by its primary key.
 
-    Args:
-        request (Request): The HTTP request object containing session information.
-        pk (idType): The primary key of the validation entry to retrieve.
+#     Args:
+#         request (Request): The HTTP request object containing session information.
+#         pk (idType): The primary key of the validation entry to retrieve.
 
-    Returns:
-        DocumentValidationResponse: The response model containing the details of the validation.
-    """
-    sess: AsyncSession = request.state.sess
-    return await validation_service.get_validation(pk, sess)
+#     Returns:
+#         DocumentValidationResponse: The response model containing the details of the validation.
+#     """
+#     sess: AsyncSession = request.state.sess
+#     return await validation_service.get_validation(pk, sess)
 
-@router.get("/{pk}/errors", response_model=DocumentValidationErrorsResponse)
-async def get_validation_errors(request: Request, pk: idType) -> DocumentValidationErrorsResponse:
-    """
-    Retrieve validation errors for a specific validation entry.
+# @router.get("/{pk}/errors", response_model=DocumentValidationErrorsResponse)
+# async def get_validation_errors(request: Request, pk: idType) -> DocumentValidationErrorsResponse:
+#     """
+#     Retrieve validation errors for a specific validation entry.
 
-    Args:
-        request (Request): The HTTP request object containing session information.
-        pk (idType): The primary key of the validation entry to retrieve errors for.
+#     Args:
+#         request (Request): The HTTP request object containing session information.
+#         pk (idType): The primary key of the validation entry to retrieve errors for.
 
-    Returns:
-        DocumentValidationErrorsResponse: The response model containing the validation errors.
-    """
-    sess: AsyncSession = request.state.sess
-    return await validation_service.get_validation_errors(pk, sess)
+#     Returns:
+#         DocumentValidationErrorsResponse: The response model containing the validation errors.
+#     """
+#     sess: AsyncSession = request.state.sess
+#     return await validation_service.get_validation_errors(pk, sess)

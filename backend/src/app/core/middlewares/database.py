@@ -1,3 +1,4 @@
+import traceback
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -14,6 +15,7 @@ class DatabaseAsyncSessionManager(BaseHTTPMiddleware):
                 response = await call_next(request)
                 await session.commit()
             except Exception as e:
+                traceback.print_exc()
                 await session.rollback()
                 status = getattr(e, "status_code", 500)
                 error_response = BaseResponse(status=status, message=str(e))

@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import List, Optional
 from fastapi import HTTPException, status
 
@@ -13,6 +14,13 @@ from app.core.utils.ai import setup_fact_checker_model
 from AI_services.ai_services.models.fact_checker import FactCheckerPipeline
 from AI_services.ai_services.response import SuggestionResponse
 
+
+@lru_cache(maxsize=None)
+def perform_prediction(text: str) -> list[SuggestionResponse]:
+    model: FactCheckerPipeline = setup_fact_checker_model()
+    return model.evaluate_text(text)
+
+
 async def start_validation(
     document_pk: idType, sess: AsyncSession
 ) -> List[SuggestionResponse]:
@@ -21,12 +29,7 @@ async def start_validation(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
         )
-    model: FactCheckerPipeline = setup_fact_checker_model()
-    predictions: List[SuggestionResponse] = model.evaluate_text(
-            document.content.lower().strip().replace("\n", " "),
-        )
-    return predictions
-
+    return perform_prediction(document.content.lower().strip().replace("\n", " "))
 
 
 async def reset_validation(pk: idType, sess: AsyncSession) -> None:
