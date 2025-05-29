@@ -2,10 +2,7 @@ version: '3.9'
 
 services:
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    image: sae-backend:latest
+    image: ghcr.io/bani2016up/sae-backend:latest
     restart: on-failure
     working_dir: /app/src
     ports:
