@@ -43,7 +43,7 @@ jobs:
         with:
           context: backend/
           file: backend/Dockerfile
-          tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/sae-backend:latest
+          tags: $ghcr.io/${{ env.OWNER_LC }}/sae-backend:latest
           push: true
           platforms: linux/amd64,linux/arm64
   
