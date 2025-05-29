@@ -14,10 +14,8 @@ from app.core.utils.validation import get_validation_schema
 async def start_validation(
     document_pk: idType, sess: AsyncSession
 ) -> DocumentValidationResponse:
-    # validation: Optional[Validation] = await ValidationDAO.create(
-    #     Validation(document_id=document_pk), sess
-    # )
-    # return get_validation_schema(validation)
+    #....
+    return None
 
 
 
