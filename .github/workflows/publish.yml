@@ -1,5 +1,6 @@
 name: Deploy SAE
 
+
 on:
   push:
     branches:
@@ -7,6 +8,9 @@ on:
   release:
     types: [published]
 
+env:
+  BRANCH: compose-fix
+  
 permissions:
   contents: read
   packages: write
@@ -20,7 +24,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          ref: compose-fix
+          ref: ${{ env.BRANCH }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -62,5 +66,7 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
             cd ./sae
+            git checkout ${{ env.BRANCH }}
+            git pull 
             docker-compose -f docker-compose.deploy.yml pull backend
             docker-compose -f docker-compose.deploy.yml up -d --no-recreate backend
