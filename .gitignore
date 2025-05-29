@@ -180,3 +180,4 @@ data
 *.index
 notebooks/setup_clearml_env.py
 backend.zip
+secrets
