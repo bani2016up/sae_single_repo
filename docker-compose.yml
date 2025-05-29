@@ -33,6 +33,7 @@ services:
         export DATABASE_URL="$${SQLALCHEMY_DATABASE_URL}"
         
         poetry run alembic upgrade head
+        poetry run python -m spacy download en_core_web_trf
         exec poetry run python main.py
 
   db:

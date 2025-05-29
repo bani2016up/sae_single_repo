@@ -15,8 +15,7 @@ RUN pip install poetry
 
 COPY pyproject.toml poetry.lock* ./
 RUN poetry config virtualenvs.create false && \
-    poetry install --no-interaction --no-ansi --no-root && \
-    poetry run python -m spacy download en_core_web_trf
+    poetry install --no-interaction --no-ansi --no-root
 
 
 COPY . .
