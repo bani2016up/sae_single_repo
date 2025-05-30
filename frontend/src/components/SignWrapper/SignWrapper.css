@@ -18,7 +18,7 @@
     margin-bottom: 100px;
 }
 
-img {
+.img-wrapper {
     margin-bottom: 15px;
 }
 
@@ -29,20 +29,20 @@ img {
     /* left: 290px; */
 }
 
-text {
+.span-wrapper {
     font-family: 'Inter', sans-serif;
     color: #c2c2c2;
 ;
 
 }
 
-a {
+.a-wrapper {
     color: #FFFFFF;
     margin-left: 5px;
     text-decoration: none;
 }
 
-a:hover {
+.a-wrapper:hover {
     text-decoration: underline;
 }
 
