@@ -108,11 +108,6 @@ async def logout(payload: TokenPayload) -> JSONResponse:
             status_code=status.HTTP_400_BAD_REQUEST, detail="Logout failed"
         )
 
-
-def give_account_info(payload: TokenPayload) -> TokenPayload:
-    return payload
-
-
 async def delete_all_cookies() -> JSONResponse:
     try:
         response = JSONResponse(
