@@ -4,12 +4,12 @@ name: Deploy SAE
 on:
   push:
     branches:
-      - compose-fix
+      - main
   release:
     types: [published]
 
 env:
-  BRANCH: compose-fix
+  BRANCH: main
 
 permissions:
   contents: read
