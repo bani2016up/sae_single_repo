@@ -1,4 +1,5 @@
-from typing import Optional
+from functools import lru_cache
+from typing import List, Optional
 from fastapi import HTTPException, status
 
 from app.core.dao import ValidationDAO, ErrorDAO, DocumentDAO, Validation, Document
@@ -9,14 +10,26 @@ from app.api.routes.v1.schemas.response.validation import (
 )
 from app.core.types import AsyncSession, idType
 from app.core.utils.validation import get_validation_schema
+from app.core.utils.ai import setup_fact_checker_model
+from AI_services.ai_services.models.fact_checker import FactCheckerPipeline
+from AI_services.ai_services.response import SuggestionResponse
+
+
+@lru_cache(maxsize=None)
+def perform_prediction(text: str) -> list[SuggestionResponse]:
+    model: FactCheckerPipeline = setup_fact_checker_model()
+    return model.evaluate_text(text)
 
 
 async def start_validation(
     document_pk: idType, sess: AsyncSession
-) -> DocumentValidationResponse:
-    #....
-    return None
-
+) -> List[SuggestionResponse]:
+    document: Document | None = await DocumentDAO.get(document_pk, sess)
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
+        )
+    return perform_prediction(document.content.lower().strip().replace("\n", " "))
 
 
 async def reset_validation(pk: idType, sess: AsyncSession) -> None:
