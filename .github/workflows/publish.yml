@@ -50,6 +50,15 @@ jobs:
           tags: ghcr.io/${{ env.OWNER_LC }}/sae-backend:latest
           push: true
           platforms: linux/amd64
+
+      - name: Build & push frontend
+        uses: docker/build-push-action@v4
+        with:
+          context: frontend/
+          file: frontend/Dockerfile
+          tags: ghcr.io/${{ env.OWNER_LC }}/sae-frontend:latest
+          push: true
+          platforms: linux/amd64
   
 
   deploy:
@@ -69,4 +78,6 @@ jobs:
             git checkout ${{ env.BRANCH }}
             git pull 
             docker-compose -f docker-compose.deploy.yml pull backend
+            docker-compose -f docker-compose.deploy.yml pull frontend
             docker-compose -f docker-compose.deploy.yml up -d --no-recreate backend
+            docker-compose -f docker-compose.deploy.yml up -d --no-recreate frontend
