@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Route, useNavigate } from "react-router-dom"; // <-- import useNavigate
 
 import { API } from "../../constants";
 
@@ -8,16 +8,17 @@ import SignButton from "../SignButton/SignButton";
 
 import "./SignWrapper.css";
 
-export default function SignWrapper({ children, htype}) {
+export default function SignWrapper({ children, htype }) {
+    const navigate = useNavigate();
 
     if (children === 'Sign up') {
         const [email, setEmail] = useState('');
         const [password, setPassword] = useState('');
         const [confirm, setConfirm] = useState('');
-        const [error, setError] = useState(''); // <-- Add error state
+        const [error, setError] = useState('');
 
         function handleSignUpButtonClick() {
-            setError(""); // Clear previous error
+            setError("");
 
             if (email === "" || password === "" || confirm === "") {
                 console.error("Empty field error");
@@ -42,23 +43,31 @@ export default function SignWrapper({ children, htype}) {
                     },
                     body: JSON.stringify({ email, password }),
                 })
-                    .then(res => res.json())
+                    .then(res => {
+                        console.log('Status:', res.status);
+                        console.log('Is ok:', res.ok);
+                        console.log('Status:', res.statusText);
+                        if (res.status === 200) {
+                            navigate('/signin');
+                        }
+                        return res.json();
+                    })
                     .then(data => {
                         console.log('Server response:', data);
-                        // handle server response (e.g., show success, redirect, etc.)
                     })
                     .catch(error => {
                         setError('Failed to sign up.');
                         console.error('Error:', error);
                     });
+                
             }
         }
 
         return (
             <div className="sign-wrapper">
-                <img src="../src/assets/SAE logo.svg" alt="SAE" />
+                <img src="../src/assets/sae-logo.svg" alt="SAE" />
                 <div className="wrapper">
-                    {error && <text className="error-message">{error}</text>}
+                    {error && <span className="error-message">{error}</span>}
                     <SignInput
                         ty="email"
                         value={email}
@@ -81,8 +90,8 @@ export default function SignWrapper({ children, htype}) {
                     <SignButton handleSignButtonClick_={handleSignUpButtonClick}>{children}</SignButton>
                 </div>
                 <div className="sign-text">
-                    <text>Already have an account?</text>
-                    <Link to={'/sign' + htype}>{'Sign ' + htype}</Link>
+                    <span className="span-wrapper">Already have an account?</span>
+                    <Link className="a-wrapper" to={'/sign' + htype}>{'Sign ' + htype}</Link>
                 </div>
             </div>
         );
@@ -105,8 +114,8 @@ export default function SignWrapper({ children, htype}) {
                 return;
             } else {
                 setError(""); // No error
-                console.log("Sign up in process...");
-                fetch(API + 'auth/users', {
+                console.log("Sign in in process...");
+                fetch(API + 'auth/sessions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -114,13 +123,20 @@ export default function SignWrapper({ children, htype}) {
                     },
                     body: JSON.stringify({ email, password }),
                 })
-                    .then(res => res.json())
+                    .then(res => {
+                        console.log('Status:', res.status);
+                        console.log('Is ok:', res.ok);
+                        if (res.status === 200)
+                            {
+                                navigate('/editor')
+                            }
+                        return res.json();
+                    })
                     .then(data => {
                         console.log('Server response:', data);
-                        // handle server response (e.g., show success, redirect, etc.)
                     })
                     .catch(error => {
-                        setError('Failed to sign up.');
+                        setError('Failed to sign in.');
                         console.error('Error:', error);
                     });
             }
@@ -128,9 +144,9 @@ export default function SignWrapper({ children, htype}) {
 
         return (
             <div className="sign-wrapper">
-                <img src="../src/assets/SAE logo.svg" alt="SAE" />
+                <img className="img-wrapper" src="../src/assets/sae-logo.svg" alt="SAE" />
                 <div className="wrapper">
-                    {error && <text className="error-message">{error}</text>}
+                    {error && <span className="error-message">{error}</span>}
                     <SignInput
                         ty="email"
                         value={email}
@@ -146,8 +162,8 @@ export default function SignWrapper({ children, htype}) {
                     <SignButton handleSignButtonClick_={handleSignInButtonClick}>{children}</SignButton>
                 </div>
                 <div className="sign-text">
-                    <text>Do not have an account?</text>
-                    <Link to={'/sign' + htype}>{'Sign ' + htype}</Link>
+                    <span className="span-wrapper">Do not have an account?</span>
+                    <Link className="a-wrapper" to={'/sign' + htype}>{'Sign ' + htype}</Link>
                 </div>
             </div>
         );

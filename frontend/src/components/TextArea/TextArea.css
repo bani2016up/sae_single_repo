@@ -1,0 +1,12 @@
+.text-area {
+    width: 704px;
+    min-height: 1000px;
+    margin-top: 30px;
+    /* or your preferred minimum */
+    resize: none;
+    /* prevent manual resizing if you want */
+    overflow: hidden;
+    /* hide scrollbars */
+    font-size: 16px;
+    box-sizing: border-box;
+}

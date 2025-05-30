@@ -15,7 +15,7 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-input {
+.input-sign {
     font-size: 16px;
     text-align:left;
     font-weight: 100;
@@ -32,11 +32,11 @@ input {
 }
 
 
-input::placeholder {
+.input-sign::placeholder {
     opacity: 50%;
 }
 
-input:focus {
+.input-sign:focus {
     border-color: #747474;
     outline: none;
 }

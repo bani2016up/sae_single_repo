@@ -4,7 +4,7 @@ import './SignInput.css';
 export default function SignInput({ children, ty, min_len, max_len, value, onChange}) {
     return (
         <div className="sign-input">
-            <input
+            <input className="input-sign"
                 minLength={min_len}
                 maxLength={max_len}
                 type={ty}
