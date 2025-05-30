@@ -76,6 +76,7 @@ jobs:
   deploy:
     name: Deploy via docker-compose.deploy.yml
     needs: build
+    if: needs.build.outputs['filter.backend'] == 'true' || needs.build.outputs['filter.frontend'] == 'true'
     runs-on: ubuntu-latest
 
     steps:
