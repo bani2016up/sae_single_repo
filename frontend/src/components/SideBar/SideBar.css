@@ -1,0 +1,49 @@
+.sidebar {
+    width: 308px;
+    height: 100vh;
+    background-color: #212121;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 32px;
+    box-sizing: border-box;
+    justify-content: flex-start;
+}
+
+.img-sidebar {
+    width: 128px;
+    height: 128px;
+    margin-bottom: 32px;
+    display: block;
+}
+
+.file-list {
+    width: 100%;
+    flex: 1 1 auto;
+    margin-bottom: 32px;
+    overflow-y: auto;
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0 0 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.divider {
+    width: 80%;
+    height: 1px;
+    background: #444;
+    margin: 32px 0 24px 0;
+    align-self: center;
+}
+
+.dropzone {
+    margin-top: auto;
+    margin-bottom: 32px;
+    align-self: center;
+}

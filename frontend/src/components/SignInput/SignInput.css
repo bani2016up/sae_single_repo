@@ -1,0 +1,47 @@
+
+
+
+
+.sign-input {
+    /* background-color: transparent; */
+    border-radius: 40px;
+    border: 1px solid #C0C0C0;
+    width: 283px;
+    height: 46px;
+    margin-top: 35px;
+    /* margin: 11px; */
+    background: transparent;
+    /* opacity: 50%; */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.input-sign {
+    font-size: 16px;
+    text-align:left;
+    font-weight: 100;
+    font-family: 'Inter', sans-serif;
+    width: 100%;
+    height: 100%;
+    padding-left: 10px;
+    padding-right: 5px;
+    background: #2c2c2c;
+    color: #FFFFFF;
+    border: transparent;
+    border-radius: 40px;
+    
+}
+
+
+.input-sign::placeholder {
+    opacity: 50%;
+}
+
+.input-sign:focus {
+    border-color: #747474;
+    outline: none;
+}
+
+.sign-input:focus-within {
+    border-color: #747474;
+    box-shadow: none;
+}

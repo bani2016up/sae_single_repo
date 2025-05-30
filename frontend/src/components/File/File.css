@@ -1,0 +1,42 @@
+.img-selector {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    /* Prevent icon from shrinking */
+}
+
+.file-selector {
+    width: 100%;
+    height: 66px;
+    display: flex;
+    align-items: center;
+    background: #3C3C3C;
+    border-radius: 40px 0 0 40px;
+    border: none;
+    padding: 0 24px;
+    gap: 16px;
+    transition: background 0.2s;
+}
+
+.file-selector:hover,
+.file-selector:focus {
+    background: #2F2F2F;
+}
+
+
+.span-selector {
+    display: block;
+    flex: 1 1 0%;
+    /* Take remaining space */
+    font-size: 16px;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+    /* Left-align text */
+    margin: 0;
+    /* Remove right margin */
+    direction: ltr;
+    /* Ensure left-to-right text */
+}

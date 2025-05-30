@@ -1,0 +1,33 @@
+.dropzone {
+    /* border: 2px dashed #aaa; */
+    height: 239px;
+    width: 308px;
+    /* padding-left: 91px;
+    padding-right: 91px; */
+    padding-bottom: 42px;
+    padding-top: 57px;
+    background: #212121;
+    color: #fff;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+
+.img-dropezone {
+    width: 150px;
+    height: 150px;
+    display: flex;
+}
+
+.dropzone:hover .img-dropezone,
+.dropzone.dragging .img-dropezone {
+    filter:
+        /* drop-shadow(0 0 18px #fff) */
+        drop-shadow(0 0 28px #00eaff)
+        drop-shadow(-6px 6px 18px #ff00ea)
+        drop-shadow(6px -6px 18px #ffe600)
+        drop-shadow(0 0 32px #fff)
+        brightness(1.3);
+    transition: filter 0.2s;
+}

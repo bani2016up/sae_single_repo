@@ -1,0 +1,10 @@
+.file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 0 0 0 0;
+    background: none;
+    border-radius: 0;
+    box-shadow: none;
+    width: 100%;
+}
