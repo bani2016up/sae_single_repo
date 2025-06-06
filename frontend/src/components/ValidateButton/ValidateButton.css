@@ -1,0 +1,22 @@
+
+
+
+.validate-button {
+    width: 350px;
+    height: 60px;
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    color: black;
+    background-color: #D9D9D9;
+    border-radius: 14px;
+    opacity: 50%;
+    border: none;
+    font-size: 16px;
+}
+
+.validate-button:hover {
+    opacity: 100%;
+}
+
