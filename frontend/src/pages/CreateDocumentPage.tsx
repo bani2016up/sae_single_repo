@@ -24,8 +24,8 @@ export function CreateDocumentPage() {
       toast.success('Document created successfully')
       navigate(`/documents/${data.id}`)
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Failed to create document')
+    onError: () => {
+      toast.error('Failed to create document')
     },
   })
 
@@ -36,8 +36,8 @@ export function CreateDocumentPage() {
       toast.success('Document uploaded successfully')
       navigate(`/documents/${data.id}`)
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Failed to upload document')
+    onError: () => {
+      toast.error('Failed to upload document')
     },
   })
 

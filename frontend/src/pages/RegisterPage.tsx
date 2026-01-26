@@ -48,8 +48,10 @@ export function RegisterPage() {
       await authApi.register({ email, password })
       toast.success('Registration successful! Please log in.')
       navigate('/login')
-    } catch (error: any) {
-      const message = error.response?.data?.detail || 'Registration failed. Please try again.'
+    } catch (error) {
+      const message = error instanceof Error && 'response' in error
+        ? (error as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Registration failed. Please try again.'
+        : 'Registration failed. Please try again.'
       toast.error(message)
     } finally {
       setIsLoading(false)

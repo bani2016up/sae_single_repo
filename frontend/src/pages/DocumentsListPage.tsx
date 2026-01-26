@@ -28,8 +28,8 @@ export function DocumentsListPage() {
       queryClient.invalidateQueries({ queryKey: ['documents'] })
       toast.success('Document deleted successfully')
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Failed to delete document')
+    onError: () => {
+      toast.error('Failed to delete document')
     },
   })
 

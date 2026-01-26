@@ -35,8 +35,8 @@ export function DocumentDetailPage() {
       setIsEditing(false)
       toast.success('Document updated successfully')
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Failed to update document')
+    onError: () => {
+      toast.error('Failed to update document')
     },
   })
 
@@ -47,8 +47,8 @@ export function DocumentDetailPage() {
       toast.success('Document deleted successfully')
       navigate('/documents')
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Failed to delete document')
+    onError: () => {
+      toast.error('Failed to delete document')
     },
   })
 
@@ -61,12 +61,12 @@ export function DocumentDetailPage() {
         await validationApi.start(data.id)
         toast.success('Analysis started successfully')
         navigate(`/analysis/${data.id}`)
-      } catch (error) {
+      } catch {
         toast.error('Failed to start analysis')
       }
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Failed to create validation')
+    onError: () => {
+      toast.error('Failed to create validation')
     },
   })
 

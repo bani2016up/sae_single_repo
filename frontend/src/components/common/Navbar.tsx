@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
-import { useTheme } from '../../context/ThemeContext'
+import { useAuth } from '../../hooks/useAuth'
+import { useTheme } from '../../hooks/useTheme'
 import { Button } from '../ui/button'
 import { Moon, Sun, LogOut, FileText } from 'lucide-react'
 

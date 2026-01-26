@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
@@ -22,8 +22,10 @@ export function LoginPage() {
       await login(email, password)
       toast.success('Login successful!')
       navigate('/dashboard')
-    } catch (error: any) {
-      const message = error.response?.data?.detail || 'Login failed. Please check your credentials.'
+    } catch (error) {
+      const message = error instanceof Error && 'response' in error
+        ? (error as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Login failed. Please check your credentials.'
+        : 'Login failed. Please check your credentials.'
       toast.error(message)
     } finally {
       setIsLoading(false)
