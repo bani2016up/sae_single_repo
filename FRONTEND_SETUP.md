@@ -38,10 +38,19 @@ npm install
 cp .env.example .env
 ```
 
-4. Update `.env` with your backend URL (default: `http://localhost:8000`):
+4. Update `.env` with your backend URL:
 ```env
-VITE_API_URL=http://localhost:8000
+# For development with all services on different ports
+VITE_API_URL=http://localhost:8081  # Auth service
+# OR
+VITE_API_URL=http://localhost:8000  # Document CRUD service (if using a unified gateway)
 ```
+
+**Note**: The backend consists of multiple microservices:
+- Auth Service: `http://localhost:8081` (handles authentication)
+- Document CRUD Service: `http://localhost:8000` (handles documents and validation)
+
+The frontend is configured to work with the auth service on port 8081 by default. Make sure the backend services are running before starting the frontend.
 
 ### Development
 
