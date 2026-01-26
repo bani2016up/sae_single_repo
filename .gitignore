@@ -187,3 +187,6 @@ frontend/dist
 frontend/.vite
 frontend/.env.local
 frontend/.env.*.local
+
+# Don't ignore frontend lib directory (overrides lib/ pattern above)
+!frontend/src/lib/
