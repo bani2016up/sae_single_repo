@@ -180,3 +180,10 @@ data
 *.index
 notebooks/setup_clearml_env.py
 backend.zip
+
+# Frontend
+frontend/node_modules
+frontend/dist
+frontend/.vite
+frontend/.env.local
+frontend/.env.*.local
